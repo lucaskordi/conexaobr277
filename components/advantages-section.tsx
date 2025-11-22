@@ -26,13 +26,8 @@ export default function AdvantagesSection() {
         </motion.h2>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8">
           {advantages.map((advantage, index) => (
-            <motion.div
+            <div
               key={index}
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.5, delay: index * 0.1 }}
-              whileHover={{ scale: 1.05, y: -5 }}
               className="bg-brand-yellow rounded-2xl p-6 sm:p-8 border-2 border-brand-yellow hover:border-brand-blue/50 transition-all duration-300 shadow-lg"
             >
               <div className="flex flex-col items-center text-center">
@@ -53,7 +48,7 @@ export default function AdvantagesSection() {
                   {advantage}
                 </h3>
               </div>
-            </motion.div>
+            </div>
           ))}
         </div>
       </div>

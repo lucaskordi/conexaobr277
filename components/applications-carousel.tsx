@@ -88,7 +88,7 @@ export default function ApplicationsCarousel() {
           </motion.button>
           <div 
             ref={scrollRef}
-            className="flex gap-4 sm:gap-6 overflow-x-auto overflow-y-visible pb-16 pt-8 px-8 scroll-smooth scrollbar-hide"
+            className="flex gap-4 sm:gap-6 overflow-x-hidden md:overflow-x-auto overflow-y-visible pb-16 pt-8 px-8 scroll-smooth scrollbar-hide"
             style={{ scrollBehavior: 'smooth' }}
           >
             {applications.map((application, index) => (
