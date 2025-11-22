@@ -1,65 +1,265 @@
-import Image from "next/image";
+'use client'
+
+import { motion } from 'framer-motion'
+import { useState, useEffect } from 'react'
+import Image from 'next/image'
+import Hero from '@/components/hero'
+import ApplicationsCarousel from '@/components/applications-carousel'
+import PanelCarousel from '@/components/panel-carousel'
+import PhotoGallery from '@/components/photo-gallery'
+import AdvantagesSection from '@/components/advantages-section'
+import ContactForm from '@/components/contact-form'
+import WhatsAppButton from '@/components/whatsapp-button'
+import Footer from '@/components/footer'
+import CartSidebar from '@/components/cart-sidebar'
+
+interface CartItem {
+  id: number
+  name: string
+  variant?: string
+  quantity: number
+  price: number
+  color: string
+}
+
+const samplePanels = [
+  {
+    id: 1,
+    name: 'Ripado',
+    variant: 'Cinza',
+    description: 'WPC Externo',
+    size: '0,16m x 2,80m',
+    color: '#808080',
+    image: '/prods/cinza.png',
+  },
+  {
+    id: 2,
+    name: 'Ripado',
+    variant: 'Cinza Rajado',
+    description: 'WPC Externo',
+    size: '0,16m x 2,80m',
+    color: '#A9A9A9',
+    image: '/prods/cinzarajado.png',
+  },
+  {
+    id: 3,
+    name: 'Ripado',
+    variant: 'Ipê Rajado',
+    description: 'WPC Externo',
+    size: '0,16m x 2,80m',
+    color: '#8B4513',
+    image: '/prods/iperajado.png',
+  },
+  {
+    id: 4,
+    name: 'Ripado',
+    variant: 'Jequitibá',
+    description: 'WPC Externo',
+    size: '0,16m x 2,80m',
+    color: '#D2B48C',
+    image: '/prods/jequitiba.png',
+  },
+  {
+    id: 5,
+    name: 'Ripado',
+    variant: 'Marfim',
+    description: 'WPC Externo',
+    size: '0,16m x 2,80m',
+    color: '#F5F5DC',
+    image: '/prods/marfim.png',
+  },
+  {
+    id: 6,
+    name: 'Ripado',
+    variant: 'Tabaco',
+    description: 'WPC Externo',
+    size: '0,16m x 2,80m',
+    color: '#D2691E',
+    image: '/prods/tabaco.png',
+  },
+  {
+    id: 7,
+    name: 'Ripado',
+    variant: 'Preto',
+    description: 'WPC Externo',
+    size: '0,16m x 2,80m',
+    color: '#000000',
+    image: '/prods/preto.png',
+  },
+  {
+    id: 8,
+    name: 'Ripado',
+    variant: 'Mogno',
+    description: 'WPC Externo',
+    size: '0,16m x 2,80m',
+    color: '#8B4513',
+    image: '/prods/mogno.png',
+  },
+]
+
+const sampleGalleryImages = [
+  '/gallery/cinza.webp',
+  '/gallery/cinzinha.webp',
+  '/gallery/marfim.webp',
+  '/gallery/mogno.webp',
+  '/gallery/preto.webp',
+  '/gallery/rajj.webp',
+  '/gallery/tabaco.webp',
+  '/gallery/tabacow.webp',
+]
 
 export default function Home() {
+  const [cartItems, setCartItems] = useState<CartItem[]>([])
+  const [isCartOpen, setIsCartOpen] = useState(false)
+  const [isMobile, setIsMobile] = useState(false)
+
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth < 640)
+    }
+    checkMobile()
+    window.addEventListener('resize', checkMobile)
+    return () => window.removeEventListener('resize', checkMobile)
+  }, [])
+
+  const handleAddToCart = (item: CartItem) => {
+    setCartItems((prev) => {
+      const existingItem = prev.find((i) => i.id === item.id)
+      if (existingItem) {
+        return prev.map((i) =>
+          i.id === item.id
+            ? { ...i, quantity: i.quantity + item.quantity }
+            : i
+        )
+      }
+      return [...prev, item]
+    })
+    setIsCartOpen(true)
+  }
+
+  const handleRemoveItem = (id: number) => {
+    setCartItems((prev) => prev.filter((item) => item.id !== id))
+  }
+
+  const handleUpdateQuantity = (id: number, delta: number) => {
+    setCartItems((prev) =>
+      prev
+        .map((item) =>
+          item.id === id
+            ? { ...item, quantity: Math.max(0, item.quantity + delta) }
+            : item
+        )
+        .filter((item) => item.quantity > 0)
+    )
+  }
+
+  const handleClearCart = () => {
+    setCartItems([])
+  }
+
   return (
-    <div className="flex min-h-screen items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex min-h-screen w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
+    <div className="min-h-screen bg-gradient-to-b from-brand-blue via-brand-blue to-blue-900">
+      <header className="pt-6 pb-6 px-4 sm:px-6 lg:px-8 backdrop-blur-md bg-brand-blue/70 sticky top-0 z-40 shadow-md relative border-b border-white/10">
+        <motion.div
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6 }}
+          className={`max-w-7xl mx-auto ${isMobile ? 'flex items-center justify-center relative' : ''}`}
+        >
+          <Image
+            src="/conexaologo.svg"
+            alt="Conexão Logo"
+            width={280}
+            height={94}
+            priority
+            className={`w-auto h-16 sm:h-20 drop-shadow-lg ${isMobile ? '' : 'mx-auto'}`}
+          />
+          {isMobile && (
+            <motion.button
+              onClick={() => setIsCartOpen(true)}
+              initial={{ opacity: 0, scale: 0 }}
+              animate={{ opacity: 1, scale: 1 }}
+              whileHover={{ scale: 1.1 }}
+              whileTap={{ scale: 0.9 }}
+              className="absolute right-0 w-12 h-12 bg-brand-white text-brand-blue rounded-full shadow-lg flex items-center justify-center hover:bg-gray-50 transition-all duration-300"
+              aria-label="Abrir carrinho"
             >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
+              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
+              </svg>
+              {cartItems.length > 0 && (
+                <motion.span
+                  initial={{ scale: 0 }}
+                  animate={{ scale: 1 }}
+                  className="absolute -top-2 -right-2 bg-brand-yellow text-brand-blue rounded-full w-6 h-6 flex items-center justify-center text-xs font-bold shadow-md"
+                >
+                  {cartItems.reduce((sum, item) => sum + item.quantity, 0)}
+                </motion.span>
+              )}
+            </motion.button>
+          )}
+        </motion.div>
+        <div className="absolute bottom-0 left-0 right-0 h-1 w-full">
+          <div 
+            className="h-full w-full"
+            style={{
+              background: "linear-gradient(90deg, transparent 0%, rgba(255, 206, 0, 0.8) 30%, rgba(255, 206, 0, 1) 50%, rgba(255, 206, 0, 0.8) 70%, transparent 100%)"
+            }}
+          />
         </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
+      </header>
+
+      <Hero />
+
+      <ApplicationsCarousel />
+
+      <PanelCarousel 
+        panels={samplePanels} 
+        onAddToCart={handleAddToCart}
+      />
+
+      <PhotoGallery images={sampleGalleryImages} />
+
+      <AdvantagesSection />
+
+      <section className="py-12 sm:py-24 pb-16 sm:pb-32 px-4 sm:px-6 lg:px-8 text-center">
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6 }}
+        >
+          <motion.button
+            onClick={() => {
+              const phoneNumber = '5541995278067'
+              const message = 'Olá, vim do site. Gostaria de saber mais informações.'
+              const url = `https://wa.me/${phoneNumber}?text=${encodeURIComponent(message)}`
+              window.open(url, '_blank')
+            }}
+            whileHover={{ scale: 1.05, boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.3)' }}
+            whileTap={{ scale: 0.98 }}
+            className="px-10 py-5 bg-gradient-to-r from-brand-yellow to-yellow-400 text-brand-blue rounded-2xl font-bold text-xl sm:text-2xl shadow-2xl hover:shadow-yellow-500/50 transition-all duration-300 transform"
           >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
-        </div>
-      </main>
+            Clique aqui e fale com um de nossos consultores
+          </motion.button>
+        </motion.div>
+      </section>
+
+      <div id="contact">
+        <ContactForm />
+      </div>
+
+      <WhatsAppButton />
+
+      <Footer />
+
+      <CartSidebar
+        isOpen={isCartOpen}
+        onClose={() => setIsCartOpen(false)}
+        items={cartItems}
+        onRemoveItem={handleRemoveItem}
+        onUpdateQuantity={handleUpdateQuantity}
+        onClearCart={handleClearCart}
+      />
     </div>
-  );
+  )
 }
