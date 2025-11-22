@@ -89,21 +89,29 @@ export default function CartSidebar({ isOpen, onClose, items, onRemoveItem, onUp
   }
 
   useEffect(() => {
-    if (isOpen && !isMinimized) {
+    if (isOpen && !isMinimized && isMobile) {
+      const scrollY = window.scrollY
       document.body.style.overflow = 'hidden'
       document.body.style.position = 'fixed'
+      document.body.style.top = `-${scrollY}px`
       document.body.style.width = '100%'
+      
+      return () => {
+        document.body.style.overflow = 'unset'
+        document.body.style.position = 'unset'
+        document.body.style.top = 'unset'
+        document.body.style.width = 'unset'
+        window.scrollTo(0, scrollY)
+      }
+    } else if (isOpen && !isMinimized && !isMobile) {
+      document.body.style.overflow = 'hidden'
     } else {
       document.body.style.overflow = 'unset'
       document.body.style.position = 'unset'
+      document.body.style.top = 'unset'
       document.body.style.width = 'unset'
     }
-    return () => {
-      document.body.style.overflow = 'unset'
-      document.body.style.position = 'unset'
-      document.body.style.width = 'unset'
-    }
-  }, [isOpen, isMinimized])
+  }, [isOpen, isMinimized, isMobile])
 
   if (!mounted) {
     return null

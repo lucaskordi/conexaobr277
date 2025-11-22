@@ -92,8 +92,8 @@ export default function PanelCarousel({ panels, onAddToCart }: PanelCarouselProp
         </motion.div>
         <div className="relative">
           <div className="bg-brand-white rounded-2xl shadow-2xl p-6 sm:p-8 lg:p-10 border border-gray-100">
-            <div className="flex flex-col md:flex-row gap-8 min-h-[300px] md:min-h-[500px]">
-              <div className="flex-1 flex">
+            <div className="flex flex-col md:flex-row gap-8 min-h-[350px] md:min-h-[500px]">
+              <div className="flex-1 flex items-center justify-center">
                 <AnimatePresence mode="wait">
                   <motion.div
                     key={selectedIndex}
@@ -101,14 +101,14 @@ export default function PanelCarousel({ panels, onAddToCart }: PanelCarouselProp
                     animate={{ opacity: 1, scale: 1 }}
                     exit={{ opacity: 0, scale: 0.95 }}
                     transition={{ duration: 0.3, ease: 'easeInOut' }}
-                    className="relative w-full h-full min-h-[250px] md:min-h-[500px] bg-gradient-to-br from-gray-100 to-gray-200 rounded-xl overflow-hidden shadow-inner"
+                    className="relative w-full h-[320px] sm:h-[360px] md:h-full md:min-h-[500px] bg-white rounded-xl overflow-hidden shadow-inner"
                   >
                     {currentPanel.image ? (
                       <Image
                         src={currentPanel.image}
                         alt={currentPanel.name}
                         fill
-                        className="object-cover rounded-lg"
+                        className="object-contain rounded-lg p-1"
                       />
                     ) : (
                       <div

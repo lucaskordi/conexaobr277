@@ -25,7 +25,7 @@ interface CartItem {
 const samplePanels = [
   {
     id: 1,
-    name: 'Ripado',
+    name: 'Painel Ripado',
     variant: 'Cinza',
     description: 'WPC Externo',
     size: '0,16m x 2,80m',
@@ -34,7 +34,7 @@ const samplePanels = [
   },
   {
     id: 2,
-    name: 'Ripado',
+    name: 'Painel Ripado',
     variant: 'Cinza Rajado',
     description: 'WPC Externo',
     size: '0,16m x 2,80m',
@@ -43,7 +43,7 @@ const samplePanels = [
   },
   {
     id: 3,
-    name: 'Ripado',
+    name: 'Painel Ripado',
     variant: 'Ipê Rajado',
     description: 'WPC Externo',
     size: '0,16m x 2,80m',
@@ -52,7 +52,7 @@ const samplePanels = [
   },
   {
     id: 4,
-    name: 'Ripado',
+    name: 'Painel Ripado',
     variant: 'Jequitibá',
     description: 'WPC Externo',
     size: '0,16m x 2,80m',
@@ -61,16 +61,16 @@ const samplePanels = [
   },
   {
     id: 5,
-    name: 'Ripado',
+    name: 'Painel Ripado',
     variant: 'Marfim',
     description: 'WPC Externo',
     size: '0,16m x 2,80m',
     color: '#F5F5DC',
-    image: '/prods/marfim.png',
+    image: '/prods/marfim.webp',
   },
   {
     id: 6,
-    name: 'Ripado',
+    name: 'Painel Ripado',
     variant: 'Tabaco',
     description: 'WPC Externo',
     size: '0,16m x 2,80m',
@@ -79,7 +79,7 @@ const samplePanels = [
   },
   {
     id: 7,
-    name: 'Ripado',
+    name: 'Painel Ripado',
     variant: 'Preto',
     description: 'WPC Externo',
     size: '0,16m x 2,80m',
@@ -88,7 +88,7 @@ const samplePanels = [
   },
   {
     id: 8,
-    name: 'Ripado',
+    name: 'Painel Ripado',
     variant: 'Mogno',
     description: 'WPC Externo',
     size: '0,16m x 2,80m',
