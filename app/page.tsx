@@ -193,7 +193,7 @@ export default function Home() {
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-brand-blue via-brand-blue to-blue-900 overflow-x-hidden">
-      <header className="pt-6 pb-6 px-4 sm:px-6 lg:px-8 backdrop-blur-md bg-brand-blue/70 sticky top-0 z-40 shadow-md relative border-b border-white/10">
+      <header className="pt-6 pb-6 px-4 sm:px-6 lg:px-8 backdrop-blur-md bg-brand-blue/70 fixed sm:sticky top-0 left-0 right-0 z-40 shadow-md border-b border-white/10">
         <motion.div
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
