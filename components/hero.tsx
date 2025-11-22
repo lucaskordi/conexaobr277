@@ -9,15 +9,15 @@ export default function Hero() {
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       transition={{ duration: 0.8, ease: 'easeOut' }}
-      className="relative w-full py-16 sm:py-20 md:py-24 px-4 sm:px-6 lg:px-8"
-      style={{ zIndex: 1, paddingTop: '140px' }}
+      className="relative w-full pt-44 pb-16 sm:pt-24 sm:py-20 md:py-24 px-4 sm:px-6 lg:px-8"
+      style={{ zIndex: 1 }}
     >
       <div className="relative z-10 flex flex-col items-center justify-center text-center">
         <motion.h1
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.8, delay: 0.2 }}
-          className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-extrabold text-brand-white mb-6 leading-tight -mt-20"
+          className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-extrabold text-brand-white mb-6 leading-tight"
         >
           <span className="block mb-2">Elegância e sofisticação com o</span>
           <span className="block text-brand-yellow drop-shadow-lg">menor preço do mercado</span>

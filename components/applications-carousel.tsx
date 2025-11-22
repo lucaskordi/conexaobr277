@@ -1,7 +1,7 @@
 'use client'
 
 import { motion } from 'framer-motion'
-import { useState, useRef } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import Image from 'next/image'
 
 const applications = [
@@ -29,8 +29,21 @@ export default function ApplicationsCarousel() {
   const scrollRef = useRef<HTMLDivElement>(null)
   const cardRefs = useRef<(HTMLDivElement | null)[]>([])
 
+  useEffect(() => {
+    if (typeof window === 'undefined') return
+    
+    applicationImages.forEach((src) => {
+      const link = document.createElement('link')
+      link.rel = 'preload'
+      link.as = 'image'
+      link.href = src
+      document.head.appendChild(link)
+    })
+  }, [])
+
   const scroll = (direction: 'left' | 'right') => {
-    const isMobile = typeof window !== 'undefined' && window.innerWidth < 640
+    if (typeof window === 'undefined') return
+    const isMobile = window.innerWidth < 640
     
     if (isMobile) {
       const newIndex = direction === 'left' 
@@ -65,7 +78,7 @@ export default function ApplicationsCarousel() {
   }
 
   return (
-    <section className="py-8 sm:py-12 px-4 sm:px-6 lg:px-8">
+    <section className="py-8 sm:py-12 px-0 sm:px-6 lg:px-8">
       <div className="max-w-7xl mx-auto">
         <motion.h2
           initial={{ opacity: 0, y: 20 }}
@@ -88,21 +101,13 @@ export default function ApplicationsCarousel() {
           </motion.button>
           <div 
             ref={scrollRef}
-            className="flex gap-4 sm:gap-6 overflow-x-hidden md:overflow-x-auto overflow-y-visible pb-16 pt-8 px-8 scroll-smooth scrollbar-hide"
+            className="flex gap-4 sm:gap-6 overflow-x-hidden md:overflow-x-auto overflow-y-visible pb-16 pt-8 px-4 md:px-8 scroll-smooth scrollbar-hide"
             style={{ scrollBehavior: 'smooth' }}
           >
             {applications.map((application, index) => (
               <motion.div
                 key={index}
                 ref={(el) => { cardRefs.current[index] = el }}
-                initial={{ opacity: 0, x: 50 }}
-                whileInView={{ opacity: 1, x: 0 }}
-                viewport={{ once: true }}
-                transition={{ 
-                  duration: 0.3, 
-                  delay: index * 0.05,
-                  ease: 'easeOut'
-                }}
                 whileHover={{ 
                   scale: 1.05, 
                   y: -8,
@@ -115,6 +120,7 @@ export default function ApplicationsCarousel() {
                     src={applicationImages[index]}
                     alt={application}
                     fill
+                    priority={index < 3}
                     className="object-cover transition-transform duration-500 group-hover:scale-110"
                   />
                   <div className="absolute inset-0 bg-black/50 transition-all duration-500 group-hover:bg-black/0" />
