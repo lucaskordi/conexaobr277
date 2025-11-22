@@ -163,21 +163,14 @@ export default function PanelCarousel({ panels, onAddToCart }: PanelCarouselProp
                       ))}
                     </div>
                   </div>
-                  <div className="space-y-3 mb-6">
-                    <div className="flex items-center gap-3">
-                      <span className="text-sm font-semibold text-gray-600">Tamanho:</span>
-                      <span className="px-3 py-1 bg-gray-100 rounded-lg text-sm font-medium text-gray-800">
-                        {currentPanel.size}
-                      </span>
-                    </div>
-                    <div className="flex items-center gap-3">
-                      <span className="text-sm font-semibold text-gray-600">Cor:</span>
-                      <span
-                        className="inline-block w-8 h-8 rounded-full border-3 border-gray-300 shadow-md"
-                        style={{ backgroundColor: currentPanel.color }}
-                      />
-                    </div>
-                  </div>
+                         <div className="space-y-3 mb-6">
+                           <div className="flex items-center gap-3">
+                             <span className="text-sm font-semibold text-gray-600">Tamanho:</span>
+                             <span className="px-3 py-1 bg-gray-100 rounded-lg text-sm font-medium text-gray-800">
+                               {currentPanel.size}
+                             </span>
+                           </div>
+                         </div>
                 </div>
                 <div className="mb-6 p-4 bg-gradient-to-br from-brand-yellow/10 to-yellow-50 rounded-xl border border-brand-yellow/20">
                   <div className="flex items-baseline gap-3 mb-2">
