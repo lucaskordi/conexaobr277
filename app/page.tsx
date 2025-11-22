@@ -122,6 +122,40 @@ export default function Home() {
     return () => window.removeEventListener('resize', checkMobile)
   }, [])
 
+  useEffect(() => {
+    let touchStartX = 0
+    let touchStartY = 0
+
+    const handleTouchStart = (e: TouchEvent) => {
+      touchStartX = e.touches[0].clientX
+      touchStartY = e.touches[0].clientY
+    }
+
+    const handleTouchMove = (e: TouchEvent) => {
+      if (e.touches.length !== 1) return
+
+      const touchCurrentX = e.touches[0].clientX
+      const touchCurrentY = e.touches[0].clientY
+      const diffX = Math.abs(touchCurrentX - touchStartX)
+      const diffY = Math.abs(touchCurrentY - touchStartY)
+
+      const element = document.elementFromPoint(touchCurrentX, touchCurrentY)
+      const scrollableElement = element?.closest('.overflow-x-auto, .overflow-x-scroll, [data-scrollable]')
+
+      if (!scrollableElement && diffX > diffY && diffX > 10) {
+        e.preventDefault()
+      }
+    }
+
+    document.addEventListener('touchstart', handleTouchStart, { passive: true })
+    document.addEventListener('touchmove', handleTouchMove, { passive: false })
+    
+    return () => {
+      document.removeEventListener('touchstart', handleTouchStart)
+      document.removeEventListener('touchmove', handleTouchMove)
+    }
+  }, [])
+
   const handleAddToCart = (item: CartItem) => {
     setCartItems((prev) => {
       const existingItem = prev.find((i) => i.id === item.id)
@@ -158,7 +192,7 @@ export default function Home() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-brand-blue via-brand-blue to-blue-900">
+    <div className="min-h-screen bg-gradient-to-b from-brand-blue via-brand-blue to-blue-900 overflow-x-hidden">
       <header className="pt-6 pb-6 px-4 sm:px-6 lg:px-8 backdrop-blur-md bg-brand-blue/70 sticky top-0 z-40 shadow-md relative border-b border-white/10">
         <motion.div
           initial={{ opacity: 0, y: -20 }}
