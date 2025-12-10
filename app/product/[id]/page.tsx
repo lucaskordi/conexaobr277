@@ -22,7 +22,7 @@ type VariantAttribute = {
 type GroupedVariants = {
   colors: VariantAttribute[]
   sizes: VariantAttribute[]
-  other: Product['variants']
+  other: ProductVariant[]
 }
 
 function parseVariantName(name: string): { color?: string; size?: string; rest?: string } {
@@ -346,7 +346,7 @@ function groupVariants(variants: Product['variants']): GroupedVariants {
   
   const colorsMap = new Map<string, VariantAttribute>()
   const sizesMap = new Map<string, VariantAttribute>()
-  const other: Product['variants'] = []
+  const other: ProductVariant[] = []
   let hasDetectedAttributes = false
   
   for (const variant of variants) {
@@ -387,7 +387,7 @@ function groupVariants(variants: Product['variants']): GroupedVariants {
   return {
     colors: Array.from(colorsMap.values()),
     sizes: sortedSizes,
-    other: hasDetectedAttributes ? other : variants
+    other: hasDetectedAttributes ? other : (variants || [])
   }
 }
 
