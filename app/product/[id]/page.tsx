@@ -484,10 +484,14 @@ export default function ProductPage() {
   useEffect(() => {
     if (params.id) {
       getProduct(params.id as string).then((p) => {
+        if (!p) {
+          setIsLoading(false)
+          return
+        }
         setProduct(p)
         setSelectedColor(null)
         setSelectedSize(null)
-        if (p?.variants && p.variants.length > 0) {
+        if (p.variants && p.variants.length > 0) {
           const grouped = groupVariants(p.variants)
           if (grouped.colors.length > 0) {
             setSelectedColor(grouped.colors[0].value)
@@ -509,7 +513,7 @@ export default function ProductPage() {
         setIsLoading(false)
 
         setIsLoadingRelated(true)
-        if (p?.categoryId) {
+        if (p.categoryId) {
           getProducts({ categoryId: p.categoryId, limit: 12 }).then((result) => {
             const filtered = result.products.filter(prod => prod.id !== p.id)
             if (filtered.length > 0) {
