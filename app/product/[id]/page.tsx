@@ -885,7 +885,7 @@ export default function ProductPage() {
                     </div>
                   )}
                   
-                  {groupedVariants.colors.length === 0 && groupedVariants.sizes.length === 0 && groupedVariants.other.length > 0 && (
+                  {groupedVariants.colors.length === 0 && groupedVariants.sizes.length === 0 && groupedVariants.other && groupedVariants.other.length > 0 && (
                     <div className="flex-1">
                       <label className="block text-sm font-medium text-gray-700 mb-2">
                         Variante
