@@ -886,7 +886,7 @@ export async function getCheckoutUrl(items: Array<{ productId: string; skuId?: s
       return productData.redirect_url_card
     }
 
-    const checkoutUrl = `${baseUrl}/checkout`
+    const checkoutUrl = `${secureBaseUrl}/checkout`
     console.log('⚠️ Usando URL base de checkout como fallback:', checkoutUrl)
     return checkoutUrl
   } catch (error) {
