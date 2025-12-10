@@ -60,6 +60,8 @@ export function ProductCard({ product }: ProductCardProps) {
       variantId: variant?.id,
       variantName: variant?.name,
       skuId: variant?.id,
+      categoryId: product.categoryId,
+      categoryName: product.category?.name,
     })
     openCart()
   }
@@ -197,7 +199,7 @@ export function ProductCard({ product }: ProductCardProps) {
         <div className="mt-auto">
           <Button
             onClick={handleAddToCart}
-            className="w-full"
+            className="w-full leading-tight sm:leading-normal"
             disabled={product.active === false}
           >
             <ShoppingCart className="w-4 h-4 mr-2" />

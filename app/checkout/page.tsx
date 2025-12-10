@@ -22,6 +22,10 @@ export default function CheckoutPage() {
   const [checkoutUrl, setCheckoutUrl] = useState<string | null>(null)
   const [error, setError] = useState('')
 
+  const isOnlyPainelRipado = items.length > 0 && items.every(item => 
+    item.categoryName?.toLowerCase() === 'painel ripado'
+  )
+
   const subtotal = getTotal()
   const shipping = 0
   const total = subtotal + shipping
@@ -81,6 +85,30 @@ export default function CheckoutPage() {
     )
   }
 
+  if (!isOnlyPainelRipado) {
+    return (
+      <div className="min-h-screen bg-gray-50">
+        <Navbar />
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+          <div className="text-center">
+            <div className="bg-yellow-50 border border-yellow-200 text-yellow-800 px-6 py-4 rounded-lg mb-6 max-w-2xl mx-auto">
+              <p className="font-semibold text-lg mb-2">Checkout não disponível</p>
+              <p className="text-sm mb-4">
+                O checkout online está disponível apenas para carrinhos contendo exclusivamente Painéis Ripados.
+              </p>
+              <p className="text-sm">
+                Para outros produtos, utilize o botão "Comprar via WhatsApp" no carrinho.
+              </p>
+            </div>
+            <Button onClick={() => router.push('/products')}>
+              Voltar para Produtos
+            </Button>
+          </div>
+        </div>
+      </div>
+    )
+  }
+
   return (
     <div className="min-h-screen bg-gradient-to-b from-brand-blue via-brand-blue to-blue-900">
       <Navbar />
@@ -102,9 +130,21 @@ export default function CheckoutPage() {
                 Finalizar Compra
               </h2>
               
-              <p className="text-gray-600 mb-6">
-                Você será redirecionado para o checkout seguro da Yampi para finalizar sua compra.
-              </p>
+              {!isOnlyPainelRipado && (
+                <div className="bg-yellow-50 border border-yellow-200 text-yellow-800 px-4 py-3 rounded-lg mb-6">
+                  <p className="font-semibold mb-1">Atenção:</p>
+                  <p className="text-sm">
+                    O checkout online está disponível apenas para carrinhos contendo exclusivamente Painéis Ripados. 
+                    Para outros produtos, utilize o botão "Comprar via WhatsApp".
+                  </p>
+                </div>
+              )}
+              
+              {isOnlyPainelRipado && (
+                <p className="text-gray-600 mb-6">
+                  Você será redirecionado para o checkout seguro da Yampi para finalizar sua compra.
+                </p>
+              )}
 
               {isLoading && (
                 <div className="flex flex-col items-center justify-center py-8 gap-4">
@@ -134,9 +174,10 @@ export default function CheckoutPage() {
 
                   <Button
                     onClick={handleCheckout}
-                    disabled={!checkoutUrl || isLoading}
+                    disabled={!checkoutUrl || isLoading || !isOnlyPainelRipado}
                     size="lg"
                     className="w-full"
+                    title={!isOnlyPainelRipado ? "Checkout disponível apenas para carrinhos com apenas Painéis Ripados" : undefined}
                   >
                     Ir para o Checkout da Yampi
                   </Button>

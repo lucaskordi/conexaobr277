@@ -11,7 +11,7 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
     return (
       <button
         className={cn(
-          'inline-flex items-center justify-center rounded-md font-medium transition-all duration-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50',
+          'inline-flex items-center justify-center rounded-md font-medium transition-all duration-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 whitespace-normal text-center',
           {
             'bg-gradient-to-r from-brand-yellow to-yellow-400 text-brand-blue hover:shadow-lg hover:shadow-yellow-500/50 font-bold focus-visible:ring-brand-yellow': variant === 'default',
             'border border-brand-blue bg-white text-brand-blue hover:bg-brand-blue hover:!text-white focus-visible:ring-brand-blue': variant === 'outline',

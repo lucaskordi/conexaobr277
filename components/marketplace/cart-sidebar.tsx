@@ -15,6 +15,10 @@ export function CartSidebar() {
   const getTotal = useCartStore((state) => state.getTotal)
   const clearCart = useCartStore((state) => state.clearCart)
 
+  const isOnlyPainelRipado = items.length > 0 && items.every(item => 
+    item.categoryName?.toLowerCase() === 'painel ripado'
+  )
+
   return (
     <>
       <div
@@ -127,14 +131,25 @@ export function CartSidebar() {
               <span className="text-brand-blue">Total:</span>
               <span className="text-brand-blue">R$ {getTotal().toFixed(2).replace('.', ',')}</span>
             </div>
-            <Link href="/checkout" onClick={closeCart} className="block">
+            {isOnlyPainelRipado ? (
+              <Link href="/checkout" onClick={closeCart} className="block">
+                <Button 
+                  className="w-full text-base font-bold transition-all duration-300 hover:scale-105 active:scale-95 shadow-lg hover:shadow-xl hover:shadow-yellow-500/50" 
+                  size="lg"
+                >
+                  Finalizar Compra
+                </Button>
+              </Link>
+            ) : (
               <Button 
-                className="w-full text-base font-bold transition-all duration-300 hover:scale-105 active:scale-95 shadow-lg hover:shadow-xl hover:shadow-yellow-500/50" 
+                className="w-full text-base font-bold transition-all duration-300 shadow-lg opacity-50 cursor-not-allowed" 
                 size="lg"
+                disabled
+                title="Finalizar Compra disponível apenas para carrinhos com apenas Painéis Ripados"
               >
                 Finalizar Compra
               </Button>
-            </Link>
+            )}
             <button
               type="button"
               onClick={() => {

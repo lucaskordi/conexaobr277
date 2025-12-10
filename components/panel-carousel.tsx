@@ -220,7 +220,7 @@ export default function PanelCarousel({ panels, onAddToCart }: PanelCarouselProp
                   disabled={currentQuantity === 0}
                   whileHover={currentQuantity > 0 ? { scale: 1.02 } : {}}
                   whileTap={currentQuantity > 0 ? { scale: 0.98 } : {}}
-                  className={`w-full mt-6 px-6 py-4 rounded-xl font-bold text-lg shadow-lg transition-all duration-300 ${
+                  className={`w-full mt-6 px-6 py-4 rounded-xl font-bold text-lg shadow-lg transition-all duration-300 leading-tight sm:leading-normal whitespace-normal text-center ${
                     currentQuantity > 0
                       ? 'bg-gradient-to-r from-brand-blue to-blue-700 text-white hover:from-blue-700 hover:to-blue-800 cursor-pointer'
                       : 'bg-gray-300 text-gray-500 cursor-not-allowed'

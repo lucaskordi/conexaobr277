@@ -576,6 +576,8 @@ export default function ProductPage() {
       variantId: selectedVariant || undefined,
       variantName: variantDisplayName || variant?.name,
       skuId: selectedVariant || undefined,
+      categoryId: product.categoryId,
+      categoryName: product.category?.name,
     })
 
     openCart()
@@ -738,55 +740,6 @@ export default function ProductPage() {
                 )}
               </div>
             </div>
-
-            {relatedProducts.length > 0 && (
-              <div className="mt-6">
-                <div className="bg-brand-yellow rounded-lg p-4 shadow-md border border-yellow-300">
-                  <h2 className="text-lg font-bold text-brand-blue mb-3">
-                    Você também pode gostar
-                  </h2>
-                  {isLoadingRelated ? (
-                    <div className="flex items-center justify-center py-6">
-                      <LoadingSpinner size="sm" />
-                    </div>
-                  ) : (
-                    <div className="grid grid-cols-3 gap-3">
-                      {relatedProducts.slice(0, 3).map((product) => (
-                        <Link 
-                          key={product.id} 
-                          href={`/product/${product.id}`}
-                          className="block"
-                        >
-                          <div className="bg-white rounded-lg shadow-md border border-gray-200 overflow-hidden hover:shadow-lg transition-all h-full flex flex-col">
-                            {product.images && product.images.length > 0 && (
-                              <div className="relative aspect-square w-full">
-                                <Image
-                                  src={product.images[0]}
-                                  alt={product.name}
-                                  fill
-                                  className="object-cover"
-                                  sizes="(max-width: 1024px) 33vw, 200px"
-                                />
-                              </div>
-                            )}
-                            <div className="p-3 flex flex-col flex-grow">
-                              <h3 className="font-semibold text-brand-blue text-sm mb-1 line-clamp-2 min-h-[2.5rem]">
-                                {product.name}
-                              </h3>
-                              <div className="mt-auto">
-                                <p className="text-brand-blue font-bold text-base">
-                                  R$ {product.price.toFixed(2).replace('.', ',')}
-                                </p>
-                              </div>
-                            </div>
-                          </div>
-                        </Link>
-                      ))}
-                    </div>
-                  )}
-                </div>
-              </div>
-            )}
           </div>
 
           <div className="bg-white/95 backdrop-blur-sm rounded-lg p-6 shadow-md border border-white/20">
@@ -963,7 +916,7 @@ export default function ProductPage() {
                 onClick={handleAddToCart}
                 disabled={product.active === false}
                 size="lg"
-                className="flex-1"
+                className="flex-1 leading-tight sm:leading-normal"
               >
                 <ShoppingCart className="w-5 h-5 mr-2" />
                 {product.active === false ? 'Indisponível' : 'Adicionar ao Carrinho'}
@@ -994,11 +947,60 @@ export default function ProductPage() {
             )}
           </div>
         </div>
+
+        {relatedProducts.length > 0 && (
+          <div className="mt-8">
+            <div className="bg-brand-yellow rounded-lg p-4 shadow-md border border-yellow-300">
+              <h2 className="text-lg font-bold text-brand-blue mb-3">
+                Você também pode gostar
+              </h2>
+              {isLoadingRelated ? (
+                <div className="flex items-center justify-center py-6">
+                  <LoadingSpinner size="sm" />
+                </div>
+              ) : (
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                  {relatedProducts.slice(0, 3).map((product) => (
+                    <Link 
+                      key={product.id} 
+                      href={`/product/${product.id}`}
+                      className="block"
+                    >
+                      <div className="bg-white rounded-lg shadow-md border border-gray-200 overflow-hidden hover:shadow-lg transition-all h-full flex flex-col">
+                        {product.images && product.images.length > 0 && (
+                          <div className="relative aspect-square w-full">
+                            <Image
+                              src={product.images[0]}
+                              alt={product.name}
+                              fill
+                              className="object-cover"
+                              sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+                            />
+                          </div>
+                        )}
+                        <div className="p-3 flex flex-col flex-grow">
+                          <h3 className="font-semibold text-brand-blue text-sm mb-1 line-clamp-2 min-h-[2.5rem]">
+                            {product.name}
+                          </h3>
+                          <div className="mt-auto">
+                            <p className="text-brand-blue font-bold text-base">
+                              R$ {product.price.toFixed(2).replace('.', ',')}
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+                    </Link>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+        )}
       </div>
 
-          <CartSidebar />
-          <WhatsAppButton />
-        </div>
-      )
+      <CartSidebar />
+      <WhatsAppButton />
+    </div>
+  )
     }
 

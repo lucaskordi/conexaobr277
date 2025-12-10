@@ -3,6 +3,7 @@
 import { motion } from 'framer-motion'
 import { useState, useRef, useEffect } from 'react'
 import Image from 'next/image'
+import { useSwipe } from '@/hooks/use-swipe'
 
 const applications = [
   'Salas',
@@ -28,6 +29,11 @@ export default function ApplicationsCarousel() {
   const [currentIndex, setCurrentIndex] = useState(0)
   const scrollRef = useRef<HTMLDivElement>(null)
   const cardRefs = useRef<(HTMLDivElement | null)[]>([])
+
+  const swipeHandlers = useSwipe(
+    () => scroll('right'),
+    () => scroll('left')
+  )
 
   useEffect(() => {
     if (typeof window === 'undefined') return
@@ -101,8 +107,9 @@ export default function ApplicationsCarousel() {
           </motion.button>
           <div 
             ref={scrollRef}
-            className="flex gap-4 sm:gap-6 overflow-x-hidden md:overflow-x-auto overflow-y-visible pb-16 pt-8 px-4 md:px-8 scroll-smooth scrollbar-hide"
+            className="flex gap-4 sm:gap-6 overflow-x-hidden md:overflow-x-auto overflow-y-visible pb-16 pt-8 px-4 md:px-8 scroll-smooth scrollbar-hide touch-pan-x"
             style={{ scrollBehavior: 'smooth' }}
+            {...swipeHandlers}
           >
             {applications.map((application, index) => (
               <motion.div

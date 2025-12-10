@@ -5,6 +5,7 @@ import { motion } from 'framer-motion'
 import { ChevronLeft, ChevronRight } from 'lucide-react'
 import { ProductCard } from '@/components/ui/product-card'
 import { Product } from '@/types'
+import { useSwipe } from '@/hooks/use-swipe'
 
 interface ProductsCarouselProps {
   products: Product[]
@@ -14,6 +15,11 @@ export function ProductsCarousel({ products }: ProductsCarouselProps) {
   const [currentIndex, setCurrentIndex] = useState(0)
   const scrollRef = useRef<HTMLDivElement>(null)
   const cardRefs = useRef<(HTMLDivElement | null)[]>([])
+
+  const swipeHandlers = useSwipe(
+    () => scroll('right'),
+    () => scroll('left')
+  )
 
   const scroll = (direction: 'left' | 'right') => {
     if (typeof window === 'undefined') return
@@ -68,8 +74,9 @@ export function ProductsCarousel({ products }: ProductsCarouselProps) {
       </motion.button>
       <div 
         ref={scrollRef}
-        className="flex gap-4 sm:gap-6 overflow-x-hidden md:overflow-x-auto overflow-y-visible pb-16 pt-8 px-4 md:px-8 scroll-smooth scrollbar-hide"
+        className="flex gap-4 sm:gap-6 overflow-x-hidden md:overflow-x-auto overflow-y-visible pb-16 pt-8 px-4 md:px-8 scroll-smooth scrollbar-hide touch-pan-x"
         style={{ scrollBehavior: 'smooth' }}
+        {...swipeHandlers}
       >
         {products.map((product, index) => (
           <div

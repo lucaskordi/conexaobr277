@@ -48,6 +48,8 @@ export interface CartItem {
   skuId?: string
   skuToken?: string
   purchaseUrl?: string
+  categoryId?: string
+  categoryName?: string
 }
 
 export interface Order {

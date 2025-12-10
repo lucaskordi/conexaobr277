@@ -13,11 +13,13 @@ interface HeroSlide {
   ctaText: string
   ctaLink: string
   image: string
+  mobileImage?: string
 }
 
 export function Hero() {
   const [currentSlide, setCurrentSlide] = useState(0)
   const [painelRipadoCategoryId, setPainelRipadoCategoryId] = useState<string | null>(null)
+  const [isMobile, setIsMobile] = useState(false)
   const timerRef = useRef<NodeJS.Timeout | null>(null)
 
   useEffect(() => {
@@ -42,6 +44,19 @@ export function Hero() {
     })
   }, [])
 
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth < 640)
+    }
+    
+    checkMobile()
+    window.addEventListener('resize', checkMobile)
+    
+    return () => {
+      window.removeEventListener('resize', checkMobile)
+    }
+  }, [])
+
   const slides: HeroSlide[] = [
     {
       title: 'Transforme seu Ambiente!',
@@ -49,6 +64,7 @@ export function Hero() {
       ctaText: 'Conheça Nossos Painéis',
       ctaLink: painelRipadoCategoryId ? `/products?category=${painelRipadoCategoryId}` : '/products',
       image: '/hero.webp',
+      mobileImage: '/mobilehero01.webp',
     },
     {
       title: 'O Maior estoque\nde Forros PVC\nestá aqui!',
@@ -56,6 +72,7 @@ export function Hero() {
       ctaText: 'Conheça Nosso Estoque',
       ctaLink: '/products',
       image: '/hero3.webp',
+      mobileImage: '/mobilehero2.webp',
     },
   ]
 
@@ -107,7 +124,7 @@ export function Hero() {
             <div
               className="absolute inset-0 bg-cover bg-center"
               style={{
-                backgroundImage: `url(${slide.image})`,
+                backgroundImage: `url(${isMobile && slide.mobileImage ? slide.mobileImage : slide.image})`,
               }}
             />
             

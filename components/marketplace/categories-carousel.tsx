@@ -1,18 +1,39 @@
 'use client'
 
 import { motion } from 'framer-motion'
-import { useState, useRef, useEffect } from 'react'
+import { useState, useRef, useEffect, useMemo } from 'react'
 import Image from 'next/image'
 import Link from 'next/link'
 import { ChevronLeft, ChevronRight } from 'lucide-react'
 import { Category } from '@/types'
 import { getCategories } from '@/services/yampi'
+import { useSwipe } from '@/hooks/use-swipe'
 
 export function CategoriesCarousel() {
   const [categories, setCategories] = useState<Category[]>([])
   const [currentIndex, setCurrentIndex] = useState(0)
   const scrollRef = useRef<HTMLDivElement>(null)
   const cardRefs = useRef<(HTMLDivElement | null)[]>([])
+  const isScrollingRef = useRef(false)
+
+  const allCategories = useMemo(() => {
+    return categories.reduce<Category[]>((acc, cat) => {
+      acc.push(cat)
+      if (cat.children) {
+        acc.push(...cat.children)
+      }
+      return acc
+    }, [])
+  }, [categories])
+
+  const infiniteCategories = useMemo(() => {
+    return [...allCategories, ...allCategories, ...allCategories]
+  }, [allCategories])
+
+  const swipeHandlers = useSwipe(
+    () => scroll('right'),
+    () => scroll('left')
+  )
 
   useEffect(() => {
     getCategories().then((cats) => {
@@ -21,14 +42,64 @@ export function CategoriesCarousel() {
     })
   }, [])
 
+  useEffect(() => {
+    if (!scrollRef.current || allCategories.length === 0) return
+
+    const handleScroll = () => {
+      if (!scrollRef.current || isScrollingRef.current) return
+
+      const { scrollLeft } = scrollRef.current
+      const cardWidth = 288
+      const gap = 24
+      const cardWithGap = cardWidth + gap
+      const sectionWidth = allCategories.length * cardWithGap
+      const middleSectionStart = sectionWidth
+      const middleSectionEnd = sectionWidth * 2
+
+      if (scrollLeft < sectionWidth) {
+        isScrollingRef.current = true
+        scrollRef.current.scrollLeft = scrollLeft + sectionWidth
+        setTimeout(() => {
+          isScrollingRef.current = false
+        }, 50)
+      } else if (scrollLeft > middleSectionEnd) {
+        isScrollingRef.current = true
+        scrollRef.current.scrollLeft = scrollLeft - sectionWidth
+        setTimeout(() => {
+          isScrollingRef.current = false
+        }, 50)
+      }
+    }
+
+    const scrollElement = scrollRef.current
+    scrollElement.addEventListener('scroll', handleScroll)
+
+    return () => {
+      scrollElement.removeEventListener('scroll', handleScroll)
+    }
+  }, [allCategories.length])
+
+  useEffect(() => {
+    if (scrollRef.current && allCategories.length > 0) {
+      const cardWidth = 288
+      const gap = 24
+      const cardWithGap = cardWidth + gap
+      const offset = allCategories.length * cardWithGap
+      scrollRef.current.scrollLeft = offset
+    }
+  }, [allCategories.length])
+
   const scroll = (direction: 'left' | 'right') => {
-    if (typeof window === 'undefined') return
+    if (typeof window === 'undefined' || !scrollRef.current || allCategories.length === 0) return
     const isMobile = window.innerWidth < 640
     
     if (isMobile) {
-      const newIndex = direction === 'left' 
-        ? Math.max(0, currentIndex - 1)
-        : Math.min(categories.length - 1, currentIndex + 1)
+      let newIndex: number
+      if (direction === 'left') {
+        newIndex = currentIndex === 0 ? allCategories.length - 1 : currentIndex - 1
+      } else {
+        newIndex = currentIndex === allCategories.length - 1 ? 0 : currentIndex + 1
+      }
       
       setCurrentIndex(newIndex)
       
@@ -40,20 +111,18 @@ export function CategoriesCarousel() {
         })
       }
     } else {
-      if (scrollRef.current) {
-        const cardWidth = 288
-        const gap = 24
-        const scrollAmount = cardWidth + gap
-        const currentScroll = scrollRef.current.scrollLeft
-        const newPosition = direction === 'left' 
-          ? currentScroll - scrollAmount 
-          : currentScroll + scrollAmount
-        
-        scrollRef.current.scrollTo({
-          left: newPosition,
-          behavior: 'smooth'
-        })
-      }
+      const cardWidth = 288
+      const gap = 24
+      const scrollAmount = cardWidth + gap
+      const currentScroll = scrollRef.current.scrollLeft
+      const newPosition = direction === 'left' 
+        ? currentScroll - scrollAmount 
+        : currentScroll + scrollAmount
+      
+      scrollRef.current.scrollTo({
+        left: newPosition,
+        behavior: 'smooth'
+      })
     }
   }
 
@@ -74,13 +143,6 @@ export function CategoriesCarousel() {
     return null
   }
 
-  const allCategories = categories.reduce<Category[]>((acc, cat) => {
-    acc.push(cat)
-    if (cat.children) {
-      acc.push(...cat.children)
-    }
-    return acc
-  }, [])
 
   if (allCategories.length === 0) {
     return null
@@ -113,16 +175,22 @@ export function CategoriesCarousel() {
           </motion.button>
           <div 
             ref={scrollRef}
-            className="flex gap-4 sm:gap-6 overflow-x-hidden md:overflow-x-auto overflow-y-visible pb-16 pt-8 px-4 md:px-8 scroll-smooth scrollbar-hide"
+            className="flex gap-4 sm:gap-6 overflow-x-hidden md:overflow-x-auto overflow-y-visible pb-16 pt-8 px-4 md:px-8 scroll-smooth scrollbar-hide touch-pan-x"
             style={{ scrollBehavior: 'smooth' }}
+            {...swipeHandlers}
           >
-            {allCategories.map((category, index) => {
+            {infiniteCategories.map((category, index) => {
               const categoryImage = getCategoryImage(category.name)
+              const originalIndex = index % allCategories.length
               
               return (
                 <motion.div
-                  key={category.id}
-                  ref={(el) => { cardRefs.current[index] = el }}
+                  key={`${category.id}-${index}`}
+                  ref={(el) => { 
+                    if (index >= allCategories.length && index < allCategories.length * 2) {
+                      cardRefs.current[originalIndex] = el
+                    }
+                  }}
                   whileHover={{ 
                     scale: 1.1,
                     transition: { duration: 0.2 }
