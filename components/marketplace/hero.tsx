@@ -64,7 +64,7 @@ export function Hero() {
       ctaText: 'Conheça Nossos Painéis',
       ctaLink: painelRipadoCategoryId ? `/products?category=${painelRipadoCategoryId}` : '/products',
       image: '/hero.webp',
-      mobileImage: '/mobilehero01.webp',
+      mobileImage: '/mobilehero2.webp',
     },
     {
       title: 'O Maior estoque\nde Forros PVC\nestá aqui!',
@@ -72,7 +72,7 @@ export function Hero() {
       ctaText: 'Conheça Nosso Estoque',
       ctaLink: '/products',
       image: '/hero3.webp',
-      mobileImage: '/mobilehero2.webp',
+      mobileImage: '/mobilehero01.webp',
     },
   ]
 
@@ -128,46 +128,74 @@ export function Hero() {
               }}
             />
             
-            <div className={`relative h-full flex items-center z-20 ${index === 1 ? 'justify-end' : ''}`}>
-              <div className={`w-full ${index === 1 ? 'pr-8 md:pr-12 lg:pr-16 pl-8 md:pl-12 lg:pl-16' : 'px-8 md:px-12 lg:px-16'}`}>
-                <div className={`max-w-2xl ${index === 1 ? 'ml-auto text-right' : ''}`}>
-                  <h1 className="text-3xl md:text-5xl font-extrabold text-gray-800 mb-4 leading-tight whitespace-pre-line">
-                    {slide.title}
-                  </h1>
-                  <p className="text-base md:text-lg text-gray-700 mb-8 whitespace-pre-line">
-                    {slide.subtitle}
-                  </p>
-                  <Link href={slide.ctaLink} className={`inline-block group relative z-30 ${index === 1 ? 'ml-auto' : ''}`}>
-                    <Button 
-                      size="lg" 
-                      className="shadow-2xl group-hover:shadow-yellow-500/50 transition-all duration-300 group-hover:scale-105 active:scale-95 relative z-30"
-                    >
-                      {slide.ctaText}
-                    </Button>
-                  </Link>
+            {isMobile ? (
+              <>
+                <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/40 to-transparent z-10" />
+                <div className="relative h-full flex items-end justify-center z-20 pb-12 px-4">
+                  <div className="w-full text-center">
+                    <h1 className="text-2xl font-extrabold text-white mb-3 leading-tight whitespace-pre-line drop-shadow-lg">
+                      {slide.title}
+                    </h1>
+                    <p className="text-sm text-white/90 mb-4 whitespace-pre-line drop-shadow-md">
+                      {slide.subtitle}
+                    </p>
+                    <Link href={slide.ctaLink} className="inline-block group relative z-30">
+                      <Button 
+                        size="lg" 
+                        className="shadow-2xl group-hover:shadow-yellow-500/50 transition-all duration-300 group-hover:scale-105 active:scale-95 relative z-30"
+                      >
+                        {slide.ctaText}
+                      </Button>
+                    </Link>
+                  </div>
+                </div>
+              </>
+            ) : (
+              <div className={`relative h-full flex items-center z-20 ${index === 1 ? 'justify-end' : ''}`}>
+                <div className={`w-full ${index === 1 ? 'pr-8 md:pr-12 lg:pr-16 pl-8 md:pl-12 lg:pl-16' : 'px-8 md:px-12 lg:px-16'}`}>
+                  <div className={`max-w-2xl ${index === 1 ? 'ml-auto text-right' : ''}`}>
+                    <h1 className="text-3xl md:text-5xl font-extrabold text-gray-800 mb-4 leading-tight whitespace-pre-line">
+                      {slide.title}
+                    </h1>
+                    <p className="text-base md:text-lg text-gray-700 mb-8 whitespace-pre-line">
+                      {slide.subtitle}
+                    </p>
+                    <Link href={slide.ctaLink} className={`inline-block group relative z-30 ${index === 1 ? 'ml-auto' : ''}`}>
+                      <Button 
+                        size="lg" 
+                        className="shadow-2xl group-hover:shadow-yellow-500/50 transition-all duration-300 group-hover:scale-105 active:scale-95 relative z-30"
+                      >
+                        {slide.ctaText}
+                      </Button>
+                    </Link>
+                  </div>
                 </div>
               </div>
-            </div>
+            )}
           </div>
         ))}
 
-        <button
-          onClick={prevSlide}
-          className="absolute left-4 top-1/2 -translate-y-1/2 bg-white/20 hover:bg-white/30 text-white p-2 rounded-full transition-colors z-10"
-          aria-label="Slide anterior"
-        >
-          <ChevronLeft className="w-6 h-6" />
-        </button>
+        {!isMobile && (
+          <>
+            <button
+              onClick={prevSlide}
+              className="absolute left-4 top-1/2 -translate-y-1/2 bg-white/20 hover:bg-white/30 text-white p-2 rounded-full transition-colors z-10"
+              aria-label="Slide anterior"
+            >
+              <ChevronLeft className="w-6 h-6" />
+            </button>
 
-        <button
-          onClick={nextSlide}
-          className="absolute right-4 top-1/2 -translate-y-1/2 bg-white/20 hover:bg-white/30 text-white p-2 rounded-full transition-colors z-10"
-          aria-label="Próximo slide"
-        >
-          <ChevronRight className="w-6 h-6" />
-        </button>
+            <button
+              onClick={nextSlide}
+              className="absolute right-4 top-1/2 -translate-y-1/2 bg-white/20 hover:bg-white/30 text-white p-2 rounded-full transition-colors z-10"
+              aria-label="Próximo slide"
+            >
+              <ChevronRight className="w-6 h-6" />
+            </button>
+          </>
+        )}
 
-        <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-2 z-10">
+        <div className={`absolute ${isMobile ? 'bottom-2' : 'bottom-4'} left-1/2 -translate-x-1/2 flex gap-2 z-10`}>
           {slides.map((_, index) => (
             <button
               key={index}
