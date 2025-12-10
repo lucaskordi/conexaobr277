@@ -886,7 +886,8 @@ export async function getCheckoutUrl(items: Array<{ productId: string; skuId?: s
       return productData.redirect_url_card
     }
 
-    const checkoutUrl = `${baseUrl}/checkout`
+    const appBaseUrl = process.env.NEXT_PUBLIC_APP_URL || process.env.NEXT_PUBLIC_YAMPI_STORE_URL || 'https://www.studiomyt.com.br'
+    const checkoutUrl = `${appBaseUrl}/checkout`
     console.log('⚠️ Usando URL base de checkout como fallback:', checkoutUrl)
     return checkoutUrl
   } catch (error) {
@@ -1079,7 +1080,7 @@ export async function calculateShippingCost(request: ShippingCostRequest): Promi
       throw new Error(`Total inválido: ${request.total}`)
     }
 
-    let orderId = request.order_id
+    let orderId: number | undefined = request.order_id
 
     if (!orderId || orderId <= 0) {
       console.log('⚠️ Nenhum order_id fornecido. A API exige um pedido válido.')
@@ -1109,12 +1110,12 @@ export async function calculateShippingCost(request: ShippingCostRequest): Promi
           console.log('✅ Pedido temporário criado com sucesso:', orderId)
         } else {
           console.warn('⚠️ Resposta não contém ID do pedido')
-          orderId = null
+          orderId = undefined
         }
       } catch (orderError: any) {
         console.warn('⚠️ Erro ao criar pedido temporário:', orderError?.message || orderError)
         console.warn('⚠️ Continuando sem order_id - a API pode rejeitar')
-        orderId = null
+        orderId = undefined
       }
     }
 
