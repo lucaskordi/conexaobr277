@@ -7,7 +7,7 @@ import { Navbar } from '@/components/marketplace/navbar'
 import { CartSidebar } from '@/components/marketplace/cart-sidebar'
 import { Button } from '@/components/ui/button'
 import { getProduct, getProducts } from '@/services/yampi'
-import { Product } from '@/types'
+import { Product, ProductVariant } from '@/types'
 import { useCartStore } from '@/store/cart-store'
 import { ShoppingCart, Star, ArrowLeft, Plus, Minus, ChevronRight } from 'lucide-react'
 import Link from 'next/link'
@@ -395,7 +395,7 @@ function findVariantByAttributes(
   variants: Product['variants'],
   selectedColor: string | null,
   selectedSize: string | null
-): Product['variants'][0] | null {
+): ProductVariant | null {
   if (!variants || variants.length === 0) return null
   
   if (!selectedColor && !selectedSize) {
