@@ -1109,12 +1109,12 @@ export async function calculateShippingCost(request: ShippingCostRequest): Promi
           console.log('✅ Pedido temporário criado com sucesso:', orderId)
         } else {
           console.warn('⚠️ Resposta não contém ID do pedido')
-          orderId = null
+          orderId = undefined
         }
       } catch (orderError: any) {
         console.warn('⚠️ Erro ao criar pedido temporário:', orderError?.message || orderError)
         console.warn('⚠️ Continuando sem order_id - a API pode rejeitar')
-        orderId = null
+        orderId = undefined
       }
     }
 
