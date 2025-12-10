@@ -7,7 +7,7 @@ import { Navbar } from '@/components/marketplace/navbar'
 import { CartSidebar } from '@/components/marketplace/cart-sidebar'
 import { Button } from '@/components/ui/button'
 import { getProduct, getProducts } from '@/services/yampi'
-import { Product, ProductVariant } from '@/types'
+import { Product } from '@/types'
 import { useCartStore } from '@/store/cart-store'
 import { ShoppingCart, Star, ArrowLeft, Plus, Minus, ChevronRight } from 'lucide-react'
 import Link from 'next/link'
@@ -395,7 +395,7 @@ function findVariantByAttributes(
   variants: Product['variants'],
   selectedColor: string | null,
   selectedSize: string | null
-): ProductVariant | null {
+): Product['variants'][0] | null {
   if (!variants || variants.length === 0) return null
   
   if (!selectedColor && !selectedSize) {
@@ -484,15 +484,10 @@ export default function ProductPage() {
   useEffect(() => {
     if (params.id) {
       getProduct(params.id as string).then((p) => {
-        if (!p) {
-          setIsLoading(false)
-          return
-        }
-        
         setProduct(p)
         setSelectedColor(null)
         setSelectedSize(null)
-        if (p.variants && p.variants.length > 0) {
+        if (p?.variants && p.variants.length > 0) {
           const grouped = groupVariants(p.variants)
           if (grouped.colors.length > 0) {
             setSelectedColor(grouped.colors[0].value)
@@ -514,7 +509,7 @@ export default function ProductPage() {
         setIsLoading(false)
 
         setIsLoadingRelated(true)
-        if (p.categoryId) {
+        if (p?.categoryId) {
           getProducts({ categoryId: p.categoryId, limit: 12 }).then((result) => {
             const filtered = result.products.filter(prod => prod.id !== p.id)
             if (filtered.length > 0) {
@@ -885,7 +880,7 @@ export default function ProductPage() {
                     </div>
                   )}
                   
-                  {groupedVariants.colors.length === 0 && groupedVariants.sizes.length === 0 && groupedVariants.other && groupedVariants.other.length > 0 && (
+                  {groupedVariants.colors.length === 0 && groupedVariants.sizes.length === 0 && groupedVariants.other.length > 0 && (
                     <div className="flex-1">
                       <label className="block text-sm font-medium text-gray-700 mb-2">
                         Variante

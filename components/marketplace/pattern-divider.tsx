@@ -6,7 +6,7 @@ export function PatternDivider() {
   const containerRef = useRef<HTMLDivElement>(null)
   const patternRef = useRef<HTMLDivElement>(null)
   const [scrollOffset, setScrollOffset] = useState(0)
-  const animationFrameRef = useRef<number | undefined>(undefined)
+  const animationFrameRef = useRef<number>()
 
   useEffect(() => {
     const updateScroll = () => {
