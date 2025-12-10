@@ -1,0 +1,189 @@
+'use client'
+
+import { motion } from 'framer-motion'
+import { useState, useRef, useEffect } from 'react'
+import Image from 'next/image'
+import Link from 'next/link'
+import { ChevronLeft, ChevronRight } from 'lucide-react'
+import { Category } from '@/types'
+import { getCategories } from '@/services/yampi'
+
+export function CategoriesCarousel() {
+  const [categories, setCategories] = useState<Category[]>([])
+  const [currentIndex, setCurrentIndex] = useState(0)
+  const scrollRef = useRef<HTMLDivElement>(null)
+  const cardRefs = useRef<(HTMLDivElement | null)[]>([])
+
+  useEffect(() => {
+    getCategories().then((cats) => {
+      const filtered = cats.filter(cat => cat.name.toLowerCase() !== 'novidades')
+      setCategories(filtered)
+    })
+  }, [])
+
+  const scroll = (direction: 'left' | 'right') => {
+    if (typeof window === 'undefined') return
+    const isMobile = window.innerWidth < 640
+    
+    if (isMobile) {
+      const newIndex = direction === 'left' 
+        ? Math.max(0, currentIndex - 1)
+        : Math.min(categories.length - 1, currentIndex + 1)
+      
+      setCurrentIndex(newIndex)
+      
+      if (cardRefs.current[newIndex]) {
+        cardRefs.current[newIndex]?.scrollIntoView({
+          behavior: 'smooth',
+          block: 'nearest',
+          inline: 'center'
+        })
+      }
+    } else {
+      if (scrollRef.current) {
+        const cardWidth = 288
+        const gap = 24
+        const scrollAmount = cardWidth + gap
+        const currentScroll = scrollRef.current.scrollLeft
+        const newPosition = direction === 'left' 
+          ? currentScroll - scrollAmount 
+          : currentScroll + scrollAmount
+        
+        scrollRef.current.scrollTo({
+          left: newPosition,
+          behavior: 'smooth'
+        })
+      }
+    }
+  }
+
+  const getCategoryImage = (categoryName: string): string | null => {
+    const name = categoryName.toLowerCase()
+    if (name.includes('forro') && name.includes('pvc')) {
+      return '/pvcat.png'
+    }
+    if (name.includes('churrasqueira')) {
+      return '/churrasq.png'
+    }
+    if (name.includes('painel') && name.includes('ripado')) {
+      return '/painel.png'
+    }
+    if (name.includes('ferramentas') || name.includes('ferramenta')) {
+      return '/ferram.png'
+    }
+    return null
+  }
+
+  const allCategories = categories.reduce<Category[]>((acc, cat) => {
+    acc.push(cat)
+    if (cat.children) {
+      acc.push(...cat.children)
+    }
+    return acc
+  }, [])
+
+  if (allCategories.length === 0) {
+    return null
+  }
+
+  return (
+    <section className="py-8 sm:py-12 px-0 sm:px-6 lg:px-8">
+      <div className="max-w-7xl mx-auto">
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.4, ease: 'easeOut' }}
+          className="text-center mb-8 sm:mb-12 mt-16 sm:mt-20"
+        >
+          <h2 className="text-3xl sm:text-4xl font-bold text-brand-white mb-2">
+            Categorias
+          </h2>
+          <div className="w-24 h-1 bg-brand-yellow mx-auto"></div>
+        </motion.div>
+        <div className="relative py-8 overflow-visible">
+          <motion.button
+            onClick={() => scroll('left')}
+            whileHover={{ scale: 1.1 }}
+            whileTap={{ scale: 0.9 }}
+            className="hidden md:flex absolute left-0 top-1/2 -translate-y-1/2 -translate-x-20 z-10 w-12 h-12 bg-brand-white text-brand-blue rounded-full hover:bg-gray-50 transition-all font-bold shadow-lg border-2 border-brand-blue items-center justify-center"
+            aria-label="Anterior"
+          >
+            <ChevronLeft className="w-6 h-6" />
+          </motion.button>
+          <div 
+            ref={scrollRef}
+            className="flex gap-4 sm:gap-6 overflow-x-hidden md:overflow-x-auto overflow-y-visible pb-16 pt-8 px-4 md:px-8 scroll-smooth scrollbar-hide"
+            style={{ scrollBehavior: 'smooth' }}
+          >
+            {allCategories.map((category, index) => {
+              const categoryImage = getCategoryImage(category.name)
+              
+              return (
+                <motion.div
+                  key={category.id}
+                  ref={(el) => { cardRefs.current[index] = el }}
+                  whileHover={{ 
+                    scale: 1.1,
+                    transition: { duration: 0.2 }
+                  }}
+                  className="group flex-shrink-0 w-64 sm:w-72 flex flex-col items-center cursor-pointer"
+                >
+                  <Link href={`/products?category=${category.id}`} className="block w-full">
+                    {categoryImage ? (
+                      <div className="relative w-full aspect-square mb-4 overflow-hidden rounded-lg">
+                        <Image
+                          src={categoryImage}
+                          alt={category.name}
+                          fill
+                          className="object-contain transition-transform duration-300 group-hover:scale-110"
+                        />
+                      </div>
+                    ) : (
+                      <div className="w-full aspect-square mb-4 rounded-lg bg-gradient-to-br from-brand-blue to-blue-900 flex items-center justify-center">
+                        <span className="text-brand-white text-lg font-bold">{category.name}</span>
+                      </div>
+                    )}
+                    <h3 className="text-xl sm:text-2xl font-bold text-brand-white text-center">
+                      {category.name}
+                    </h3>
+                  </Link>
+                </motion.div>
+              )
+            })}
+          </div>
+          <motion.button
+            onClick={() => scroll('right')}
+            whileHover={{ scale: 1.1 }}
+            whileTap={{ scale: 0.9 }}
+            className="hidden md:flex absolute right-0 top-1/2 -translate-y-1/2 translate-x-20 z-10 w-12 h-12 bg-brand-white text-brand-blue rounded-full hover:bg-gray-50 transition-all font-bold shadow-lg border-2 border-brand-blue items-center justify-center"
+            aria-label="Próximo"
+          >
+            <ChevronRight className="w-6 h-6" />
+          </motion.button>
+          <div className="flex justify-center items-center gap-4 mt-6 md:hidden">
+            <motion.button
+              onClick={() => scroll('left')}
+              whileHover={{ scale: 1.1 }}
+              whileTap={{ scale: 0.9 }}
+              className="w-12 h-12 bg-brand-white text-brand-blue rounded-full hover:bg-gray-50 transition-all font-bold shadow-lg border-2 border-brand-blue flex items-center justify-center"
+              aria-label="Anterior"
+            >
+              <ChevronLeft className="w-6 h-6" />
+            </motion.button>
+            <motion.button
+              onClick={() => scroll('right')}
+              whileHover={{ scale: 1.1 }}
+              whileTap={{ scale: 0.9 }}
+              className="w-12 h-12 bg-brand-white text-brand-blue rounded-full hover:bg-gray-50 transition-all font-bold shadow-lg border-2 border-brand-blue flex items-center justify-center"
+              aria-label="Próximo"
+            >
+              <ChevronRight className="w-6 h-6" />
+            </motion.button>
+          </div>
+        </div>
+      </div>
+    </section>
+  )
+}
+

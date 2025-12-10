@@ -1,36 +1,82 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Marketplace - Next.js
 
-## Getting Started
+Marketplace moderno desenvolvido com Next.js, integrado com a API Yampi.
 
-First, run the development server:
+## Estrutura do Projeto
 
+- `/app` - Páginas do Next.js App Router
+  - `/` - Página inicial do marketplace
+  - `/products` - Listagem de produtos
+  - `/product/[id]` - Detalhes do produto
+  - `/checkout` - Página de checkout
+  - `/order-success` - Página de confirmação de pedido
+  - `/lpwpc` - Site original movido para esta rota
+- `/components` - Componentes React
+  - `/marketplace` - Componentes específicos do marketplace (Navbar, Hero, CartSidebar)
+  - `/ui` - Componentes UI reutilizáveis (Button, ProductCard)
+- `/services` - Serviços de integração com APIs
+- `/store` - Gerenciamento de estado (Zustand)
+- `/types` - Definições TypeScript
+- `/lib` - Utilitários
+
+## Configuração
+
+1. Instale as dependências:
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+npm install
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+2. Configure as variáveis de ambiente:
+Crie um arquivo `.env.local` na raiz do projeto:
+```env
+NEXT_PUBLIC_YAMPI_API_URL=https://api.dooki.com.br
+NEXT_PUBLIC_YAMPI_API_VERSION=v2
+NEXT_PUBLIC_YAMPI_STORE_ALIAS=seu_alias_aqui
+NEXT_PUBLIC_YAMPI_USER_TOKEN=seu_user_token_aqui
+NEXT_PUBLIC_YAMPI_USER_SECRET=seu_user_secret_aqui
+```
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+**Onde obter as credenciais:**
+- Acesse o painel da Yampi: https://www.yampi.com.br/
+- Vá em **Perfil** > **Credenciais de API**
+- Copie o **Alias**, **User Token** e **User Secret Key**
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+Para mais detalhes, consulte o arquivo `YAMPI_INTEGRATION.md`.
 
-## Learn More
+3. Execute o servidor de desenvolvimento:
+```bash
+npm run dev
+```
 
-To learn more about Next.js, take a look at the following resources:
+Abra [http://localhost:3000](http://localhost:3000) no navegador.
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## Funcionalidades
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+- Página inicial com hero banner e produtos em destaque
+- Listagem de produtos com filtros por categoria
+- Página de detalhes do produto
+- Carrinho de compras persistente (localStorage)
+- Checkout completo
+- Integração com API Yampi para:
+  - Buscar produtos
+  - Buscar categorias
+  - Criar produtos
+  - Criar pedidos
 
-## Deploy on Vercel
+## Tecnologias
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+- Next.js 16
+- React 19
+- TypeScript
+- Tailwind CSS
+- Zustand (gerenciamento de estado)
+- Lucide React (ícones)
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## Estrutura de Rotas
+
+- `/` - Homepage do marketplace
+- `/products` - Listagem de produtos
+- `/product/[id]` - Detalhes do produto
+- `/checkout` - Finalização de compra
+- `/order-success` - Confirmação de pedido
+- `/lpwpc` - Site original

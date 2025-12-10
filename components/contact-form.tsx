@@ -33,9 +33,10 @@ export default function ContactForm() {
           transition={{ duration: 0.6 }}
           className="text-center mb-12"
         >
-          <h2 className="text-3xl sm:text-4xl font-bold text-brand-blue mb-4">
+          <h2 className="text-3xl sm:text-4xl font-bold text-brand-blue mb-2">
             Entre em Contato
           </h2>
+          <div className="w-24 h-1 bg-brand-yellow mx-auto mb-4"></div>
           <p className="text-gray-600 text-lg">
             Preencha o formulário abaixo e nossa equipe entrará em contato em breve
           </p>
