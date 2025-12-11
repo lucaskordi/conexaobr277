@@ -10,7 +10,7 @@ import { ProductsCarousel } from '@/components/marketplace/products-carousel'
 import { CartSidebar } from '@/components/marketplace/cart-sidebar'
 import { LoadingSpinner } from '@/components/ui/loading-spinner'
 import { TextDivider } from '@/components/marketplace/text-divider'
-import { Showroom360 } from '@/components/marketplace/showroom-360'
+// import { Showroom360 } from '@/components/marketplace/showroom-360'
 import Footer from '@/components/footer'
 import ContactForm from '@/components/contact-form'
 import WhatsAppButton from '@/components/whatsapp-button'
@@ -133,9 +133,9 @@ export default function Home() {
         <TextDivider />
       </div>
 
-      <div id="showroom">
+      {/* <div id="showroom">
         <Showroom360 />
-      </div>
+      </div> */}
 
       <div id="contact">
         <ContactForm />
