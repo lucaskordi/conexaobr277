@@ -744,47 +744,10 @@ export async function getCheckoutUrl(items: Array<{ productId: string; skuId?: s
       return null
     }
 
-    if (items.length === 1) {
-      const item = items[0]
-      const fullProduct = await fetchYampi<any>(`/catalog/products/${item.productId}?include=skus`)
-      const productData = fullProduct.data || fullProduct
-
-      if (productData.skus && productData.skus.data && productData.skus.data.length > 0) {
-        const sku = productData.skus.data.find((s: any) => 
-          String(s.id) === String(item.skuId) || s.sku === item.skuId
-        ) || productData.skus.data[0]
-
-        if (sku && sku.purchase_url) {
-          console.log('✅ Usando purchase_url do SKU:', sku.purchase_url)
-          return sku.purchase_url
-        }
-      }
-
-      if (productData.redirect_url_card) {
-        console.log('✅ Usando redirect_url_card:', productData.redirect_url_card)
-        return productData.redirect_url_card
-      }
-
-      if (productData.redirect_url_billet) {
-        console.log('✅ Usando redirect_url_billet:', productData.redirect_url_billet)
-        return productData.redirect_url_billet
-      }
-
-      if (productData.url) {
-        console.log('✅ Usando url do produto:', productData.url)
-        return productData.url
-      }
-    }
-
-    // Múltiplos produtos - buscar tokens dos SKUs e construir URL de checkout
-    // Formato Yampi: seguro.seudominio.com.br/r/TOKEN1:QTY1,TOKEN2:QTY2,TOKEN3:QTY3
-    console.log('🛒 Múltiplos produtos detectados (' + items.length + '), construindo URL de checkout...')
+    console.log('🛒 Construindo URL de checkout para ' + items.length + ' item(ns)...')
     
-    // Extrair domínio seguro da URL base ou usar padrão
-    const storeUrl = process.env.NEXT_PUBLIC_YAMPI_STORE_URL || `https://www.studiomyt.com.br`
     let secureDomain = process.env.NEXT_PUBLIC_YAMPI_SECURE_DOMAIN
     
-    // Se não tiver domínio seguro configurado, tentar extrair do primeiro produto
     if (!secureDomain) {
       try {
         const firstItem = items[0]
@@ -794,7 +757,6 @@ export async function getCheckoutUrl(items: Array<{ productId: string; skuId?: s
         if (firstProductData.skus && firstProductData.skus.data && firstProductData.skus.data.length > 0) {
           const firstSku = firstProductData.skus.data[0]
           if (firstSku.purchase_url) {
-            // Extrair domínio de purchase_url (ex: https://seguro.studiomyt.com.br/r/TOKEN)
             const urlMatch = firstSku.purchase_url.match(/https?:\/\/([^\/]+)/)
             if (urlMatch) {
               secureDomain = urlMatch[1]
@@ -807,20 +769,17 @@ export async function getCheckoutUrl(items: Array<{ productId: string; skuId?: s
       }
     }
     
-    // Fallback para domínio padrão se não conseguir extrair
     if (!secureDomain) {
-      // Tentar construir baseado no store alias ou usar padrão
       secureDomain = `seguro.${YAMPI_STORE_ALIAS || 'studiomyt.com.br'}`
     }
     
     const secureBaseUrl = `https://${secureDomain}`
     
     try {
-      // Buscar informações de todos os produtos para obter os tokens dos SKUs
       const productInfos = await Promise.all(
         items.map(async (item) => {
           try {
-            console.log(`🔍 Buscando produto ${item.productId} com SKU ${item.skuId}...`)
+            console.log(`🔍 Buscando produto ${item.productId} com SKU ${item.skuId} (quantidade: ${item.quantity})...`)
             const fullProduct = await fetchYampi<any>(`/catalog/products/${item.productId}?include=skus`)
             const productData = fullProduct.data || fullProduct
             
@@ -835,7 +794,6 @@ export async function getCheckoutUrl(items: Array<{ productId: string; skuId?: s
                   token: sku.token,
                   skuId: sku.id,
                   quantity: item.quantity,
-                  purchaseUrl: sku.purchase_url,
                 }
               } else {
                 console.warn(`⚠️ SKU sem token para produto ${item.productId}`)
@@ -852,12 +810,11 @@ export async function getCheckoutUrl(items: Array<{ productId: string; skuId?: s
         })
       )
 
-      const validItems = productInfos.filter(Boolean) as Array<{ token: string; skuId: number; quantity: number; purchaseUrl?: string }>
+      const validItems = productInfos.filter(Boolean) as Array<{ token: string; skuId: number; quantity: number }>
       
       console.log(`📦 Itens válidos encontrados: ${validItems.length} de ${items.length}`)
       
       if (validItems.length > 0) {
-        // Formato Yampi: TOKEN1:QTY1,TOKEN2:QTY2,TOKEN3:QTY3
         const tokensWithQuantities = validItems.map(item => `${item.token}:${item.quantity}`).join(',')
         const checkoutUrl = `${secureBaseUrl}/r/${tokensWithQuantities}`
         
@@ -873,10 +830,9 @@ export async function getCheckoutUrl(items: Array<{ productId: string; skuId?: s
         console.error('❌ Nenhum item válido encontrado para checkout')
       }
     } catch (error) {
-      console.error('❌ Erro ao construir URL de checkout com múltiplos produtos:', error)
+      console.error('❌ Erro ao construir URL de checkout:', error)
     }
 
-    // Fallback: usar URL do primeiro produto ou checkout geral
     const firstItem = items[0]
     const fullProduct = await fetchYampi<any>(`/catalog/products/${firstItem.productId}?include=skus`)
     const productData = fullProduct.data || fullProduct
