@@ -10,17 +10,51 @@ export default function ContactForm() {
     email: '',
     message: '',
   })
+  const [isSubmitting, setIsSubmitting] = useState(false)
+  const [submitStatus, setSubmitStatus] = useState<{ type: 'success' | 'error' | null; message: string }>({ type: null, message: '' })
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     setFormData({
       ...formData,
       [e.target.name]: e.target.value,
     })
+    if (submitStatus.type) {
+      setSubmitStatus({ type: null, message: '' })
+    }
   }
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    console.log('Form submitted:', formData)
+    setIsSubmitting(true)
+    setSubmitStatus({ type: null, message: '' })
+
+    try {
+      const response = await fetch('/api/contact', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(formData),
+      })
+
+      const data = await response.json()
+
+      if (response.ok) {
+        setSubmitStatus({ type: 'success', message: 'Mensagem enviada com sucesso! Entraremos em contato em breve.' })
+        setFormData({
+          name: '',
+          phone: '',
+          email: '',
+          message: '',
+        })
+      } else {
+        setSubmitStatus({ type: 'error', message: data.error || 'Erro ao enviar mensagem. Tente novamente.' })
+      }
+    } catch (error) {
+      setSubmitStatus({ type: 'error', message: 'Erro ao enviar mensagem. Tente novamente mais tarde.' })
+    } finally {
+      setIsSubmitting(false)
+    }
   }
 
   return (
@@ -133,13 +167,28 @@ export default function ContactForm() {
               placeholder="Conte-nos como podemos ajudar..."
             />
           </div>
+          {submitStatus.type && (
+            <div
+              className={`p-4 rounded-xl ${
+                submitStatus.type === 'success'
+                  ? 'bg-green-50 border-2 border-green-200 text-green-800'
+                  : 'bg-red-50 border-2 border-red-200 text-red-800'
+              }`}
+            >
+              <p className="font-semibold">{submitStatus.message}</p>
+            </div>
+          )}
+
           <motion.button
             type="submit"
-            whileHover={{ scale: 1.02, boxShadow: '0 10px 25px -5px rgba(9, 73, 169, 0.4)' }}
-            whileTap={{ scale: 0.98 }}
-            className="w-full px-6 py-4 bg-gradient-to-r from-brand-blue to-blue-700 text-brand-white rounded-xl font-semibold text-lg shadow-lg hover:shadow-xl transition-all duration-300"
+            disabled={isSubmitting}
+            whileHover={!isSubmitting ? { scale: 1.02, boxShadow: '0 10px 25px -5px rgba(9, 73, 169, 0.4)' } : {}}
+            whileTap={!isSubmitting ? { scale: 0.98 } : {}}
+            className={`w-full px-6 py-4 bg-gradient-to-r from-brand-blue to-blue-700 text-brand-white rounded-xl font-semibold text-lg shadow-lg hover:shadow-xl transition-all duration-300 ${
+              isSubmitting ? 'opacity-50 cursor-not-allowed' : ''
+            }`}
           >
-            Enviar Mensagem
+            {isSubmitting ? 'Enviando...' : 'Enviar Mensagem'}
           </motion.button>
         </motion.form>
         </div>
