@@ -28,11 +28,25 @@ export function CartSidebar() {
 
     setIsLoadingCheckout(true)
     try {
-      const checkoutItems = items.map((item) => ({
-        productId: item.productId,
-        skuId: item.skuId || item.variantId,
-        quantity: item.quantity,
-      }))
+      const itemMap = new Map<string, { productId: string; skuId: string; quantity: number }>()
+      
+      items.forEach((item) => {
+        const skuId = item.skuId || item.variantId || 'default'
+        const key = `${item.productId}-${skuId}`
+        
+        if (itemMap.has(key)) {
+          const existing = itemMap.get(key)!
+          existing.quantity += item.quantity
+        } else {
+          itemMap.set(key, {
+            productId: item.productId,
+            skuId: skuId,
+            quantity: item.quantity,
+          })
+        }
+      })
+
+      const checkoutItems = Array.from(itemMap.values())
 
       const url = await getCheckoutUrl(checkoutItems)
       if (url) {
