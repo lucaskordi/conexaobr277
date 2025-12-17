@@ -174,27 +174,6 @@ export async function fetchYampi<T>(endpoint: string, options?: RequestInit): Pr
   }
 }
 
-const normalizeImageUrl = (url: string | undefined | null): string | null => {
-  if (!url) return null
-  
-  const urlStr = String(url).trim()
-  if (!urlStr) return null
-  
-  if (urlStr.startsWith('http://') || urlStr.startsWith('https://')) {
-    return urlStr
-  }
-  
-  if (urlStr.startsWith('//')) {
-    return `https:${urlStr}`
-  }
-  
-  if (urlStr.startsWith('/')) {
-    return `https://images.yampi.me${urlStr}`
-  }
-  
-  return `https://images.yampi.me/${urlStr}`
-}
-
 function mapYampiProduct(product: any, categories?: Category[]): Product {
   console.log('🔍 Mapeando produto - Dados brutos:', JSON.stringify(product, null, 2))
   
@@ -213,78 +192,44 @@ function mapYampiProduct(product: any, categories?: Category[]): Product {
   } else if (productData.category_id || productData.category?.id) {
     category = categories?.find(cat => cat.id === String(productData.category_id || productData.category?.id))
   }
-    if (!url) return null
-    
-    const urlStr = String(url).trim()
-    if (!urlStr) return null
-    
-    if (urlStr.startsWith('http://') || urlStr.startsWith('https://')) {
-      return urlStr
-    }
-    
-    if (urlStr.startsWith('//')) {
-      return `https:${urlStr}`
-    }
-    
-    if (urlStr.startsWith('/')) {
-      return `https://images.yampi.me${urlStr}`
-    }
-    
-    return `https://images.yampi.me/${urlStr}`
-  }
   
   let images: string[] = []
   
   if (productData.images && productData.images.data && Array.isArray(productData.images.data)) {
     images = productData.images.data.map((img: any) => {
-      let url: string | null = null
-      
-      if (img.large && img.large.url) url = normalizeImageUrl(img.large.url)
-      else if (img.medium && img.medium.url) url = normalizeImageUrl(img.medium.url)
-      else if (img.thumb && img.thumb.url) url = normalizeImageUrl(img.thumb.url)
-      else if (img.small && img.small.url) url = normalizeImageUrl(img.small.url)
-      else if (typeof img === 'string') url = normalizeImageUrl(img)
-      else if (img.url) url = normalizeImageUrl(img.url)
-      else if (img.src) url = normalizeImageUrl(img.src)
-      else if (img.original_url) url = normalizeImageUrl(img.original_url)
-      else if (img.original) url = normalizeImageUrl(img.original)
-      
-      return url
-    }).filter((url): url is string => url !== null)
+      if (img.large && img.large.url) return img.large.url
+      if (img.medium && img.medium.url) return img.medium.url
+      if (img.thumb && img.thumb.url) return img.thumb.url
+      if (img.small && img.small.url) return img.small.url
+      if (typeof img === 'string') return img
+      if (img.url) return img.url
+      if (img.src) return img.src
+      if (img.original_url) return img.original_url
+      if (img.original) return img.original
+      return ''
+    }).filter(Boolean)
   } else if (productData.firstImage && productData.firstImage.data) {
     const firstImg = productData.firstImage.data
-    let url: string | null = null
-    
     if (firstImg.large && firstImg.large.url) {
-      url = normalizeImageUrl(firstImg.large.url)
+      images = [firstImg.large.url]
     } else if (firstImg.medium && firstImg.medium.url) {
-      url = normalizeImageUrl(firstImg.medium.url)
+      images = [firstImg.medium.url]
     } else if (firstImg.thumb && firstImg.thumb.url) {
-      url = normalizeImageUrl(firstImg.thumb.url)
-    } else if (firstImg.url) {
-      url = normalizeImageUrl(firstImg.url)
-    } else if (firstImg.src) {
-      url = normalizeImageUrl(firstImg.src)
+      images = [firstImg.thumb.url]
     }
-    
-    if (url) images = [url]
   } else if (Array.isArray(productData.images)) {
     images = productData.images.map((img: any) => {
-      if (typeof img === 'string') {
-        return normalizeImageUrl(img)
-      }
-      if (img.large && img.large.url) return normalizeImageUrl(img.large.url)
-      if (img.medium && img.medium.url) return normalizeImageUrl(img.medium.url)
-      if (img.url) return normalizeImageUrl(img.url)
-      if (img.src) return normalizeImageUrl(img.src)
-      if (img.original_url) return normalizeImageUrl(img.original_url)
-      if (img.original) return normalizeImageUrl(img.original)
-      return null
-    }).filter((url): url is string => url !== null)
+      if (typeof img === 'string') return img
+      if (img.large && img.large.url) return img.large.url
+      if (img.medium && img.medium.url) return img.medium.url
+      if (img.url) return img.url
+      if (img.src) return img.src
+      return ''
+    }).filter(Boolean)
   } else if (productData.media && Array.isArray(productData.media)) {
-    images = productData.media.map((media: any) => {
-      return normalizeImageUrl(media.url || media.src || media.original_url || media.original)
-    }).filter((url): url is string => url !== null)
+    images = productData.media.map((media: any) => 
+      media.url || media.src || media.original_url || media.original || ''
+    ).filter(Boolean)
   }
 
   let price = 0
@@ -646,10 +591,9 @@ export async function getProduct(id: string): Promise<Product | null> {
           console.log('💰 Preço encontrado em variação:', mapped.price)
         }
         if (firstVariation.images && Array.isArray(firstVariation.images)) {
-          mapped.images = firstVariation.images.map((img: any) => {
-            const url = typeof img === 'string' ? img : img.url || img.src || img.original_url || ''
-            return normalizeImageUrl(url)
-          }).filter((url): url is string => url !== null)
+          mapped.images = firstVariation.images.map((img: any) => 
+            typeof img === 'string' ? img : img.url || img.src || img.original_url || ''
+          ).filter(Boolean)
           console.log('🖼️ Imagens encontradas em variação:', mapped.images.length)
         }
       }
@@ -666,17 +610,16 @@ export async function getProduct(id: string): Promise<Product | null> {
       
       if (productData.media && Array.isArray(productData.media)) {
         console.log('🖼️ Encontrada media:', productData.media.length)
-        mapped.images = productData.media.map((media: any) => {
-          return normalizeImageUrl(media.url || media.src || media.original_url || media.original)
-        }).filter((url): url is string => url !== null)
+        mapped.images = productData.media.map((media: any) => 
+          media.url || media.src || media.original_url || media.original || ''
+        ).filter(Boolean)
       }
 
       if (productData.images && Array.isArray(productData.images)) {
         console.log('🖼️ Encontradas imagens diretas:', productData.images.length)
-        mapped.images = productData.images.map((img: any) => {
-          const url = typeof img === 'string' ? img : img.url || img.src || img.original_url || img.original || ''
-          return normalizeImageUrl(url)
-        }).filter((url): url is string => url !== null)
+        mapped.images = productData.images.map((img: any) => 
+          typeof img === 'string' ? img : img.url || img.src || img.original_url || img.original || ''
+        ).filter(Boolean)
       }
     }
 
@@ -801,10 +744,47 @@ export async function getCheckoutUrl(items: Array<{ productId: string; skuId?: s
       return null
     }
 
-    console.log('🛒 Construindo URL de checkout para ' + items.length + ' item(ns)...')
+    if (items.length === 1) {
+      const item = items[0]
+      const fullProduct = await fetchYampi<any>(`/catalog/products/${item.productId}?include=skus`)
+      const productData = fullProduct.data || fullProduct
+
+      if (productData.skus && productData.skus.data && productData.skus.data.length > 0) {
+        const sku = productData.skus.data.find((s: any) => 
+          String(s.id) === String(item.skuId) || s.sku === item.skuId
+        ) || productData.skus.data[0]
+
+        if (sku && sku.purchase_url) {
+          console.log('✅ Usando purchase_url do SKU:', sku.purchase_url)
+          return sku.purchase_url
+        }
+      }
+
+      if (productData.redirect_url_card) {
+        console.log('✅ Usando redirect_url_card:', productData.redirect_url_card)
+        return productData.redirect_url_card
+      }
+
+      if (productData.redirect_url_billet) {
+        console.log('✅ Usando redirect_url_billet:', productData.redirect_url_billet)
+        return productData.redirect_url_billet
+      }
+
+      if (productData.url) {
+        console.log('✅ Usando url do produto:', productData.url)
+        return productData.url
+      }
+    }
+
+    // Múltiplos produtos - buscar tokens dos SKUs e construir URL de checkout
+    // Formato Yampi: seguro.seudominio.com.br/r/TOKEN1:QTY1,TOKEN2:QTY2,TOKEN3:QTY3
+    console.log('🛒 Múltiplos produtos detectados (' + items.length + '), construindo URL de checkout...')
     
+    // Extrair domínio seguro da URL base ou usar padrão
+    const storeUrl = process.env.NEXT_PUBLIC_YAMPI_STORE_URL || `https://www.studiomyt.com.br`
     let secureDomain = process.env.NEXT_PUBLIC_YAMPI_SECURE_DOMAIN
     
+    // Se não tiver domínio seguro configurado, tentar extrair do primeiro produto
     if (!secureDomain) {
       try {
         const firstItem = items[0]
@@ -814,6 +794,7 @@ export async function getCheckoutUrl(items: Array<{ productId: string; skuId?: s
         if (firstProductData.skus && firstProductData.skus.data && firstProductData.skus.data.length > 0) {
           const firstSku = firstProductData.skus.data[0]
           if (firstSku.purchase_url) {
+            // Extrair domínio de purchase_url (ex: https://seguro.studiomyt.com.br/r/TOKEN)
             const urlMatch = firstSku.purchase_url.match(/https?:\/\/([^\/]+)/)
             if (urlMatch) {
               secureDomain = urlMatch[1]
@@ -826,17 +807,20 @@ export async function getCheckoutUrl(items: Array<{ productId: string; skuId?: s
       }
     }
     
+    // Fallback para domínio padrão se não conseguir extrair
     if (!secureDomain) {
+      // Tentar construir baseado no store alias ou usar padrão
       secureDomain = `seguro.${YAMPI_STORE_ALIAS || 'studiomyt.com.br'}`
     }
     
     const secureBaseUrl = `https://${secureDomain}`
     
     try {
+      // Buscar informações de todos os produtos para obter os tokens dos SKUs
       const productInfos = await Promise.all(
         items.map(async (item) => {
           try {
-            console.log(`🔍 Buscando produto ${item.productId} com SKU ${item.skuId} (quantidade: ${item.quantity})...`)
+            console.log(`🔍 Buscando produto ${item.productId} com SKU ${item.skuId}...`)
             const fullProduct = await fetchYampi<any>(`/catalog/products/${item.productId}?include=skus`)
             const productData = fullProduct.data || fullProduct
             
@@ -851,6 +835,7 @@ export async function getCheckoutUrl(items: Array<{ productId: string; skuId?: s
                   token: sku.token,
                   skuId: sku.id,
                   quantity: item.quantity,
+                  purchaseUrl: sku.purchase_url,
                 }
               } else {
                 console.warn(`⚠️ SKU sem token para produto ${item.productId}`)
@@ -867,11 +852,12 @@ export async function getCheckoutUrl(items: Array<{ productId: string; skuId?: s
         })
       )
 
-      const validItems = productInfos.filter(Boolean) as Array<{ token: string; skuId: number; quantity: number }>
+      const validItems = productInfos.filter(Boolean) as Array<{ token: string; skuId: number; quantity: number; purchaseUrl?: string }>
       
       console.log(`📦 Itens válidos encontrados: ${validItems.length} de ${items.length}`)
       
       if (validItems.length > 0) {
+        // Formato Yampi: TOKEN1:QTY1,TOKEN2:QTY2,TOKEN3:QTY3
         const tokensWithQuantities = validItems.map(item => `${item.token}:${item.quantity}`).join(',')
         const checkoutUrl = `${secureBaseUrl}/r/${tokensWithQuantities}`
         
@@ -887,9 +873,10 @@ export async function getCheckoutUrl(items: Array<{ productId: string; skuId?: s
         console.error('❌ Nenhum item válido encontrado para checkout')
       }
     } catch (error) {
-      console.error('❌ Erro ao construir URL de checkout:', error)
+      console.error('❌ Erro ao construir URL de checkout com múltiplos produtos:', error)
     }
 
+    // Fallback: usar URL do primeiro produto ou checkout geral
     const firstItem = items[0]
     const fullProduct = await fetchYampi<any>(`/catalog/products/${firstItem.productId}?include=skus`)
     const productData = fullProduct.data || fullProduct

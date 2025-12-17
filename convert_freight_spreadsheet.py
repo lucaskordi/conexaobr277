@@ -142,13 +142,6 @@ def convert_transportadora_to_yampi(transportadora_file, output_file):
     
     weight_range_columns = []
     excess_price_col = None
-    ad_valorem_col = None
-    gris_col = None
-    taxa_portuaria_col = None
-    seguro_fluvial_col = None
-    pedagio_col = None
-    taxa_despacho_col = None
-    tas_col = None
     
     for i, h in enumerate(headers):
         if pd.notna(h):
@@ -157,34 +150,6 @@ def convert_transportadora_to_yampi(transportadora_file, output_file):
             if 'excedente' in h_str.lower() or ('kg' in h_str.lower() and 'excedente' in h_str.lower()):
                 excess_price_col = i
                 print(f"  Coluna de preço excedente encontrada: Col {i} - {h_str}")
-            
-            if 'ad valorem' in h_str.lower() or 'advalorem' in h_str.lower():
-                ad_valorem_col = i
-                print(f"  Coluna AD Valorem encontrada: Col {i} - {h_str}")
-            
-            if 'gris' in h_str.lower():
-                gris_col = i
-                print(f"  Coluna GRIS encontrada: Col {i} - {h_str}")
-            
-            if 'portuária' in h_str.lower() or 'portuaria' in h_str.lower():
-                taxa_portuaria_col = i
-                print(f"  Coluna Taxa Portuária encontrada: Col {i} - {h_str}")
-            
-            if 'seguro fluvial' in h_str.lower():
-                seguro_fluvial_col = i
-                print(f"  Coluna Seguro Fluvial encontrada: Col {i} - {h_str}")
-            
-            if 'pedágio' in h_str.lower() or 'pedagio' in h_str.lower():
-                pedagio_col = i
-                print(f"  Coluna Pedágio encontrada: Col {i} - {h_str}")
-            
-            if 'despacho' in h_str.lower():
-                taxa_despacho_col = i
-                print(f"  Coluna Taxa de Despacho encontrada: Col {i} - {h_str}")
-            
-            if 'tas' in h_str.lower() or 'administração sefaz' in h_str.lower() or 'administracao sefaz' in h_str.lower():
-                tas_col = i
-                print(f"  Coluna TAS encontrada: Col {i} - {h_str}")
             
             if re.search(r'\d+[.,]?\d*\s*a\s*\d+[.,]?\d*\s*kg', h_str, re.IGNORECASE):
                 weight_range_columns.append((i, h_str))
@@ -246,22 +211,11 @@ def convert_transportadora_to_yampi(transportadora_file, output_file):
                 except:
                     pass
         
-        def get_tax_value(col_idx, default=0):
-            if col_idx is not None and col_idx < len(row) and pd.notna(row[col_idx]):
-                try:
-                    return float(row[col_idx])
-                except:
-                    return default
-            return default
-        
-        excess_price = get_tax_value(excess_price_col, 0)
-        ad_valorem_pct = get_tax_value(ad_valorem_col, 0)
-        gris_pct = get_tax_value(gris_col, 0)
-        taxa_portuaria = get_tax_value(taxa_portuaria_col, 0)
-        seguro_fluvial_pct = get_tax_value(seguro_fluvial_col, 0)
-        pedagio = get_tax_value(pedagio_col, 0)
-        taxa_despacho = get_tax_value(taxa_despacho_col, 0)
-        tas = get_tax_value(tas_col, 0)
+        excess_price = row[excess_price_col] if excess_price_col is not None and excess_price_col < len(row) and pd.notna(row[excess_price_col]) else 0
+        try:
+            excess_price = float(excess_price) if excess_price else 0
+        except:
+            excess_price = 0
         
         for col_idx, col_name in weight_range_columns:
             if col_idx >= len(row):
@@ -289,43 +243,8 @@ def convert_transportadora_to_yampi(transportadora_file, output_file):
             
             if peso_final_grams <= peso_inicial_grams:
                 continue
-            
-            base_freight = freight_value
-            
-            total_taxes = 0
-            
-            if taxa_despacho > 0:
-                total_taxes += taxa_despacho
-            
-            if tas > 0:
-                total_taxes += tas
-            
-            if pedagio > 0:
-                total_taxes += pedagio
-            
-            if taxa_portuaria > 0:
-                if taxa_portuaria < 3.00:
-                    total_taxes += 3.00
-                else:
-                    total_taxes += taxa_portuaria
-            
-            if seguro_fluvial_pct > 0:
-                seguro_fluvial_value = (base_freight * seguro_fluvial_pct) / 100
-                total_taxes += seguro_fluvial_value
-            
-            if ad_valorem_pct > 0:
-                ad_valorem_value = (base_freight * ad_valorem_pct) / 100
-                if ad_valorem_value < 5.66:
-                    ad_valorem_value = 5.66
-                total_taxes += ad_valorem_value
-            
-            if gris_pct > 0:
-                gris_value = (base_freight * gris_pct) / 100
-                if gris_value < 2.50:
-                    gris_value = 2.50
-                total_taxes += gris_value
-            
-            valor_frete_final = base_freight + total_taxes
+            valor_frete_cents = int(round(freight_value * 100))
+            valor_extra_cents = int(round(excess_price * 100)) if excess_price else 0
             
             yampi_row = {
                 'regiao': f"{current_region} - {current_uf}",
@@ -333,8 +252,8 @@ def convert_transportadora_to_yampi(transportadora_file, output_file):
                 'cep_final': int(cep_final),
                 'peso_inicial': peso_inicial_grams,
                 'peso_final': peso_final_grams,
-                'valor_frete': round(valor_frete_final, 2),
-                'valor_extra_por_peso': round(excess_price, 2) if excess_price else 0,
+                'valor_frete': valor_frete_cents,
+                'valor_extra_por_peso': valor_extra_cents,
                 'dias_para_entrega': delivery_days,
                 'porcentagem_adicional': 0
             }
@@ -359,87 +278,6 @@ def convert_transportadora_to_yampi(transportadora_file, output_file):
     
     return True
 
-def calculate_freight_by_distance(distance_km, min_weight_kg, max_weight_kg, base_rate_per_km=0.75, weight_factor=0.8):
-    avg_weight = (min_weight_kg + max_weight_kg) / 2
-    
-    if distance_km == 0:
-        base_freight = 45.0 + (avg_weight * weight_factor)
-    else:
-        base_freight = (distance_km * base_rate_per_km) + (avg_weight * weight_factor)
-    
-    return max(base_freight, 50.0)
-
-def generate_parana_freight_estimates():
-    parana_regions = [
-        {'name': 'Curitiba e Região Metropolitana', 'cep_inicial': 80000000, 'cep_final': 82999999, 'distance': 0, 'delivery_days': 1},
-        {'name': 'Litoral do Paraná', 'cep_inicial': 83000000, 'cep_final': 83999999, 'distance': 100, 'delivery_days': 2},
-        {'name': 'Norte do Paraná', 'cep_inicial': 86000000, 'cep_final': 86999999, 'distance': 400, 'delivery_days': 3},
-        {'name': 'Oeste do Paraná', 'cep_inicial': 85800000, 'cep_final': 85999999, 'distance': 500, 'delivery_days': 4},
-        {'name': 'Sudoeste do Paraná', 'cep_inicial': 85500000, 'cep_final': 85799999, 'distance': 350, 'delivery_days': 3},
-        {'name': 'Sul do Paraná', 'cep_inicial': 84000000, 'cep_final': 85499999, 'distance': 200, 'delivery_days': 2},
-        {'name': 'Centro do Paraná', 'cep_inicial': 87000000, 'cep_final': 87999999, 'distance': 300, 'delivery_days': 3},
-    ]
-    
-    weight_ranges = [
-        (0.01, 30),
-        (30.01, 50),
-        (50.01, 70),
-        (70.01, 100),
-    ]
-    
-    parana_rows = []
-    
-    for region in parana_regions:
-        for min_weight, max_weight in weight_ranges:
-            base_freight = calculate_freight_by_distance(region['distance'], min_weight, max_weight)
-            
-            total_taxes = 0
-            
-            taxa_despacho = 20.0
-            tas = 4.0
-            pedagio = 0.0
-            
-            if region['distance'] > 200:
-                pedagio = region['distance'] * 0.15
-            
-            total_taxes += taxa_despacho
-            total_taxes += tas
-            total_taxes += pedagio
-            
-            ad_valorem_pct = 0.8
-            gris_pct = 0.9
-            
-            if ad_valorem_pct > 0:
-                ad_valorem_value = (base_freight * ad_valorem_pct) / 100
-                if ad_valorem_value < 5.66:
-                    ad_valorem_value = 5.66
-                total_taxes += ad_valorem_value
-            
-            if gris_pct > 0:
-                gris_value = (base_freight * gris_pct) / 100
-                if gris_value < 2.50:
-                    gris_value = 2.50
-                total_taxes += gris_value
-            
-            valor_frete_final = base_freight + total_taxes
-            excess_price = 2.1
-            
-            parana_row = {
-                'regiao': f"SUL - PR ({region['name']})",
-                'cep_inicial': region['cep_inicial'],
-                'cep_final': region['cep_final'],
-                'peso_inicial': int(min_weight * 1000),
-                'peso_final': int(max_weight * 1000),
-                'valor_frete': round(valor_frete_final, 2),
-                'valor_extra_por_peso': round(excess_price, 2),
-                'dias_para_entrega': region['delivery_days'],
-                'porcentagem_adicional': 0
-            }
-            
-            parana_rows.append(parana_row)
-    
-    return parana_rows
-
 def main():
     input_file = "Planilha Transportadora.xlsx"
     output_file = "Planilha de Frete Yampi Convertida.xlsx"
@@ -456,22 +294,6 @@ def main():
     success = convert_transportadora_to_yampi(input_file, output_file)
     
     if success:
-        print("\n" + "="*60)
-        print("GERANDO ESTIMATIVAS PARA O PARANÁ")
-        print("="*60)
-        
-        parana_rows = generate_parana_freight_estimates()
-        print(f"Geradas {len(parana_rows)} linhas para o Paraná")
-        
-        existing_df = pd.read_excel(output_file, engine='openpyxl')
-        parana_df = pd.DataFrame(parana_rows)
-        
-        combined_df = pd.concat([existing_df, parana_df], ignore_index=True)
-        combined_df.to_excel(output_file, index=False, engine='openpyxl')
-        
-        print(f"\n✅ Planilha atualizada com {len(combined_df)} linhas totais")
-        print(f"   - {len(existing_df)} linhas da planilha original")
-        print(f"   - {len(parana_df)} linhas estimadas para o Paraná")
         print("\n✅ Conversão concluída com sucesso!")
     else:
         print("\n❌ Erro na conversão")

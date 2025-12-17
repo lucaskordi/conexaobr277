@@ -1,12 +1,10 @@
 'use client'
 
-import { useState } from 'react'
 import { useCartStore } from '@/store/cart-store'
 import { Button } from '../ui/button'
 import { X, Plus, Minus, Trash2, ShoppingBag } from 'lucide-react'
 import Image from 'next/image'
-import { getCheckoutUrl } from '@/services/yampi'
-import { LoadingSpinner } from '../ui/loading-spinner'
+import Link from 'next/link'
 
 export function CartSidebar() {
   const items = useCartStore((state) => state.items)
@@ -17,37 +15,9 @@ export function CartSidebar() {
   const getTotal = useCartStore((state) => state.getTotal)
   const clearCart = useCartStore((state) => state.clearCart)
 
-  const [isLoadingCheckout, setIsLoadingCheckout] = useState(false)
-
   const isOnlyPainelRipado = items.length > 0 && items.every(item => 
     item.categoryName?.toLowerCase() === 'painel ripado'
   )
-
-  const handleCheckout = async () => {
-    if (!isOnlyPainelRipado || items.length === 0) return
-
-    setIsLoadingCheckout(true)
-    try {
-      const checkoutItems = items.map((item) => ({
-        productId: item.productId,
-        skuId: item.skuId || item.variantId,
-        quantity: item.quantity,
-      }))
-
-      const url = await getCheckoutUrl(checkoutItems)
-      if (url) {
-        closeCart()
-        window.location.href = url
-      } else {
-        alert('Não foi possível gerar o link de checkout. Tente novamente.')
-      }
-    } catch (error) {
-      console.error('Erro ao preparar checkout:', error)
-      alert('Erro ao preparar checkout. Tente novamente.')
-    } finally {
-      setIsLoadingCheckout(false)
-    }
-  }
 
   return (
     <>
@@ -162,21 +132,14 @@ export function CartSidebar() {
               <span className="text-brand-blue">R$ {getTotal().toFixed(2).replace('.', ',')}</span>
             </div>
             {isOnlyPainelRipado ? (
+              <Link href="/checkout" onClick={closeCart} className="block">
                 <Button 
-                onClick={handleCheckout}
-                disabled={isLoadingCheckout}
                   className="w-full text-base font-bold transition-all duration-300 hover:scale-105 active:scale-95 shadow-lg hover:shadow-xl hover:shadow-yellow-500/50" 
                   size="lg"
                 >
-                {isLoadingCheckout ? (
-                  <span className="flex items-center justify-center gap-2">
-                    <LoadingSpinner size="sm" />
-                    Preparando checkout...
-                  </span>
-                ) : (
-                  'Finalizar Compra'
-                )}
+                  Finalizar Compra
                 </Button>
+              </Link>
             ) : (
               <Button 
                 className="w-full text-base font-bold transition-all duration-300 shadow-lg opacity-50 cursor-not-allowed" 
