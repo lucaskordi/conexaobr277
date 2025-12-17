@@ -36,18 +36,27 @@ export default function CheckoutPage() {
 
       setIsLoading(true)
       try {
+        console.log('🛒 Itens do carrinho antes do agrupamento:', items.map(i => ({ 
+          id: i.id, 
+          productId: i.productId, 
+          skuId: i.skuId, 
+          variantId: i.variantId, 
+          quantity: i.quantity 
+        })))
+        
         const itemMap = new Map<string, { productId: string; skuId: string; quantity: number }>()
         
         items.forEach((item) => {
-          const skuId = item.skuId || item.variantId || 'default'
-          const key = `${item.productId}-${skuId}`
+          const skuId = String(item.skuId || item.variantId || 'default').trim()
+          const productId = String(item.productId).trim()
+          const key = `${productId}-${skuId}`
           
           if (itemMap.has(key)) {
             const existing = itemMap.get(key)!
             existing.quantity += item.quantity
           } else {
             itemMap.set(key, {
-              productId: item.productId,
+              productId: productId,
               skuId: skuId,
               quantity: item.quantity,
             })
@@ -55,6 +64,7 @@ export default function CheckoutPage() {
         })
 
         const checkoutItems = Array.from(itemMap.values())
+        console.log('🛒 Itens agrupados para checkout:', checkoutItems.map(i => ({ productId: i.productId, skuId: i.skuId, quantity: i.quantity })))
 
         const url = await getCheckoutUrl(checkoutItems)
         if (url) {

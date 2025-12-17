@@ -744,47 +744,12 @@ export async function getCheckoutUrl(items: Array<{ productId: string; skuId?: s
       return null
     }
 
-    if (items.length === 1) {
-      const item = items[0]
-      const fullProduct = await fetchYampi<any>(`/catalog/products/${item.productId}?include=skus`)
-      const productData = fullProduct.data || fullProduct
-
-      if (productData.skus && productData.skus.data && productData.skus.data.length > 0) {
-        const sku = productData.skus.data.find((s: any) => 
-          String(s.id) === String(item.skuId) || s.sku === item.skuId
-        ) || productData.skus.data[0]
-
-        if (sku && sku.purchase_url) {
-          console.log('✅ Usando purchase_url do SKU:', sku.purchase_url)
-          return sku.purchase_url
-        }
-      }
-
-      if (productData.redirect_url_card) {
-        console.log('✅ Usando redirect_url_card:', productData.redirect_url_card)
-        return productData.redirect_url_card
-      }
-
-      if (productData.redirect_url_billet) {
-        console.log('✅ Usando redirect_url_billet:', productData.redirect_url_billet)
-        return productData.redirect_url_billet
-      }
-
-      if (productData.url) {
-        console.log('✅ Usando url do produto:', productData.url)
-        return productData.url
-      }
-    }
-
-    // Múltiplos produtos - buscar tokens dos SKUs e construir URL de checkout
-    // Formato Yampi: seguro.seudominio.com.br/r/TOKEN1:QTY1,TOKEN2:QTY2,TOKEN3:QTY3
-    console.log('🛒 Múltiplos produtos detectados (' + items.length + '), construindo URL de checkout...')
-    
-    // Extrair domínio seguro da URL base ou usar padrão
     const storeUrl = process.env.NEXT_PUBLIC_YAMPI_STORE_URL || `https://www.studiomyt.com.br`
     let secureDomain = process.env.NEXT_PUBLIC_YAMPI_SECURE_DOMAIN
     
-    // Se não tiver domínio seguro configurado, tentar extrair do primeiro produto
+    console.log(`🛒 Processando ${items.length} item(ns) para checkout...`)
+    console.log(`📋 Itens recebidos:`, items.map(i => ({ productId: i.productId, skuId: i.skuId, quantity: i.quantity })))
+    
     if (!secureDomain) {
       try {
         const firstItem = items[0]
