@@ -18,7 +18,18 @@ const nextConfig: NextConfig = {
         hostname: '*.yampi.me',
         pathname: '/**',
       },
+      {
+        protocol: 'https',
+        hostname: 'cdn.yampi.me',
+        pathname: '/**',
+      },
+      {
+        protocol: 'https',
+        hostname: 'assets.yampi.me',
+        pathname: '/**',
+      },
     ],
+    unoptimized: true,
   },
 };
 

@@ -174,6 +174,27 @@ export async function fetchYampi<T>(endpoint: string, options?: RequestInit): Pr
   }
 }
 
+const normalizeImageUrl = (url: string | undefined | null): string | null => {
+  if (!url) return null
+  
+  const urlStr = String(url).trim()
+  if (!urlStr) return null
+  
+  if (urlStr.startsWith('http://') || urlStr.startsWith('https://')) {
+    return urlStr
+  }
+  
+  if (urlStr.startsWith('//')) {
+    return `https:${urlStr}`
+  }
+  
+  if (urlStr.startsWith('/')) {
+    return `https://images.yampi.me${urlStr}`
+  }
+  
+  return `https://images.yampi.me/${urlStr}`
+}
+
 function mapYampiProduct(product: any, categories?: Category[]): Product {
   console.log('🔍 Mapeando produto - Dados brutos:', JSON.stringify(product, null, 2))
   
@@ -192,44 +213,78 @@ function mapYampiProduct(product: any, categories?: Category[]): Product {
   } else if (productData.category_id || productData.category?.id) {
     category = categories?.find(cat => cat.id === String(productData.category_id || productData.category?.id))
   }
+    if (!url) return null
+    
+    const urlStr = String(url).trim()
+    if (!urlStr) return null
+    
+    if (urlStr.startsWith('http://') || urlStr.startsWith('https://')) {
+      return urlStr
+    }
+    
+    if (urlStr.startsWith('//')) {
+      return `https:${urlStr}`
+    }
+    
+    if (urlStr.startsWith('/')) {
+      return `https://images.yampi.me${urlStr}`
+    }
+    
+    return `https://images.yampi.me/${urlStr}`
+  }
   
   let images: string[] = []
   
   if (productData.images && productData.images.data && Array.isArray(productData.images.data)) {
     images = productData.images.data.map((img: any) => {
-      if (img.large && img.large.url) return img.large.url
-      if (img.medium && img.medium.url) return img.medium.url
-      if (img.thumb && img.thumb.url) return img.thumb.url
-      if (img.small && img.small.url) return img.small.url
-      if (typeof img === 'string') return img
-      if (img.url) return img.url
-      if (img.src) return img.src
-      if (img.original_url) return img.original_url
-      if (img.original) return img.original
-      return ''
-    }).filter(Boolean)
+      let url: string | null = null
+      
+      if (img.large && img.large.url) url = normalizeImageUrl(img.large.url)
+      else if (img.medium && img.medium.url) url = normalizeImageUrl(img.medium.url)
+      else if (img.thumb && img.thumb.url) url = normalizeImageUrl(img.thumb.url)
+      else if (img.small && img.small.url) url = normalizeImageUrl(img.small.url)
+      else if (typeof img === 'string') url = normalizeImageUrl(img)
+      else if (img.url) url = normalizeImageUrl(img.url)
+      else if (img.src) url = normalizeImageUrl(img.src)
+      else if (img.original_url) url = normalizeImageUrl(img.original_url)
+      else if (img.original) url = normalizeImageUrl(img.original)
+      
+      return url
+    }).filter((url): url is string => url !== null)
   } else if (productData.firstImage && productData.firstImage.data) {
     const firstImg = productData.firstImage.data
+    let url: string | null = null
+    
     if (firstImg.large && firstImg.large.url) {
-      images = [firstImg.large.url]
+      url = normalizeImageUrl(firstImg.large.url)
     } else if (firstImg.medium && firstImg.medium.url) {
-      images = [firstImg.medium.url]
+      url = normalizeImageUrl(firstImg.medium.url)
     } else if (firstImg.thumb && firstImg.thumb.url) {
-      images = [firstImg.thumb.url]
+      url = normalizeImageUrl(firstImg.thumb.url)
+    } else if (firstImg.url) {
+      url = normalizeImageUrl(firstImg.url)
+    } else if (firstImg.src) {
+      url = normalizeImageUrl(firstImg.src)
     }
+    
+    if (url) images = [url]
   } else if (Array.isArray(productData.images)) {
     images = productData.images.map((img: any) => {
-      if (typeof img === 'string') return img
-      if (img.large && img.large.url) return img.large.url
-      if (img.medium && img.medium.url) return img.medium.url
-      if (img.url) return img.url
-      if (img.src) return img.src
-      return ''
-    }).filter(Boolean)
+      if (typeof img === 'string') {
+        return normalizeImageUrl(img)
+      }
+      if (img.large && img.large.url) return normalizeImageUrl(img.large.url)
+      if (img.medium && img.medium.url) return normalizeImageUrl(img.medium.url)
+      if (img.url) return normalizeImageUrl(img.url)
+      if (img.src) return normalizeImageUrl(img.src)
+      if (img.original_url) return normalizeImageUrl(img.original_url)
+      if (img.original) return normalizeImageUrl(img.original)
+      return null
+    }).filter((url): url is string => url !== null)
   } else if (productData.media && Array.isArray(productData.media)) {
-    images = productData.media.map((media: any) => 
-      media.url || media.src || media.original_url || media.original || ''
-    ).filter(Boolean)
+    images = productData.media.map((media: any) => {
+      return normalizeImageUrl(media.url || media.src || media.original_url || media.original)
+    }).filter((url): url is string => url !== null)
   }
 
   let price = 0
@@ -591,9 +646,10 @@ export async function getProduct(id: string): Promise<Product | null> {
           console.log('💰 Preço encontrado em variação:', mapped.price)
         }
         if (firstVariation.images && Array.isArray(firstVariation.images)) {
-          mapped.images = firstVariation.images.map((img: any) => 
-            typeof img === 'string' ? img : img.url || img.src || img.original_url || ''
-          ).filter(Boolean)
+          mapped.images = firstVariation.images.map((img: any) => {
+            const url = typeof img === 'string' ? img : img.url || img.src || img.original_url || ''
+            return normalizeImageUrl(url)
+          }).filter((url): url is string => url !== null)
           console.log('🖼️ Imagens encontradas em variação:', mapped.images.length)
         }
       }
@@ -610,16 +666,17 @@ export async function getProduct(id: string): Promise<Product | null> {
       
       if (productData.media && Array.isArray(productData.media)) {
         console.log('🖼️ Encontrada media:', productData.media.length)
-        mapped.images = productData.media.map((media: any) => 
-          media.url || media.src || media.original_url || media.original || ''
-        ).filter(Boolean)
+        mapped.images = productData.media.map((media: any) => {
+          return normalizeImageUrl(media.url || media.src || media.original_url || media.original)
+        }).filter((url): url is string => url !== null)
       }
 
       if (productData.images && Array.isArray(productData.images)) {
         console.log('🖼️ Encontradas imagens diretas:', productData.images.length)
-        mapped.images = productData.images.map((img: any) => 
-          typeof img === 'string' ? img : img.url || img.src || img.original_url || img.original || ''
-        ).filter(Boolean)
+        mapped.images = productData.images.map((img: any) => {
+          const url = typeof img === 'string' ? img : img.url || img.src || img.original_url || img.original || ''
+          return normalizeImageUrl(url)
+        }).filter((url): url is string => url !== null)
       }
     }
 

@@ -162,12 +162,12 @@ export function CartSidebar() {
               <span className="text-brand-blue">R$ {getTotal().toFixed(2).replace('.', ',')}</span>
             </div>
             {isOnlyPainelRipado ? (
-              <Button 
+                <Button 
                 onClick={handleCheckout}
                 disabled={isLoadingCheckout}
-                className="w-full text-base font-bold transition-all duration-300 hover:scale-105 active:scale-95 shadow-lg hover:shadow-xl hover:shadow-yellow-500/50" 
-                size="lg"
-              >
+                  className="w-full text-base font-bold transition-all duration-300 hover:scale-105 active:scale-95 shadow-lg hover:shadow-xl hover:shadow-yellow-500/50" 
+                  size="lg"
+                >
                 {isLoadingCheckout ? (
                   <span className="flex items-center justify-center gap-2">
                     <LoadingSpinner size="sm" />
@@ -176,7 +176,7 @@ export function CartSidebar() {
                 ) : (
                   'Finalizar Compra'
                 )}
-              </Button>
+                </Button>
             ) : (
               <Button 
                 className="w-full text-base font-bold transition-all duration-300 shadow-lg opacity-50 cursor-not-allowed" 
