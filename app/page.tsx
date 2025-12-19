@@ -15,13 +15,15 @@ import Footer from '@/components/footer'
 import ContactForm from '@/components/contact-form'
 import WhatsAppButton from '@/components/whatsapp-button'
 import { getProducts, getCategories } from '@/services/yampi'
-import { Product } from '@/types'
+import { Product, Category } from '@/types'
+import Link from 'next/link'
 
 export default function Home() {
   const [featuredProducts, setFeaturedProducts] = useState<Product[]>([])
   const [newProducts, setNewProducts] = useState<Product[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [isLoadingNew, setIsLoadingNew] = useState(true)
+  const [tintaCategoryId, setTintaCategoryId] = useState<string | null>(null)
 
   useEffect(() => {
     getProducts({ limit: 8 }).then((result) => {
@@ -35,6 +37,26 @@ export default function Home() {
       try {
         const categories = await getCategories()
         const novidadesCategory = categories.find(cat => cat.name.toLowerCase() === 'novidades')
+        
+        const findAllCategories = (cats: Category[]): Category[] => {
+          const all: Category[] = []
+          cats.forEach(cat => {
+            all.push(cat)
+            if (cat.children) {
+              all.push(...cat.children)
+            }
+          })
+          return all
+        }
+        
+        const allCategories = findAllCategories(categories)
+        const tintaCategory = allCategories.find(cat => 
+          cat.name.toLowerCase().includes('tinta')
+        )
+        
+        if (tintaCategory) {
+          setTintaCategoryId(tintaCategory.id)
+        }
         
         if (novidadesCategory) {
           const result = await getProducts({ categoryId: novidadesCategory.id, limit: 8 })
@@ -92,14 +114,27 @@ export default function Home() {
 
         <div className="w-full relative">
           <div className="absolute top-0 left-0 w-full h-1/2 bg-blue-600/40 z-0"></div>
-          <Image
-            src="/suv.png"
-            alt="Suvinil"
-            width={1920}
-            height={600}
-            className="w-full h-auto object-cover relative z-10"
-            priority
-          />
+          {tintaCategoryId ? (
+            <Link href={`/products?category=${tintaCategoryId}`} className="block cursor-pointer relative z-10">
+              <Image
+                src="/suv.png"
+                alt="Suvinil"
+                width={1920}
+                height={600}
+                className="w-full h-auto object-cover transition-opacity hover:opacity-90"
+                priority
+              />
+            </Link>
+          ) : (
+            <Image
+              src="/suv.png"
+              alt="Suvinil"
+              width={1920}
+              height={600}
+              className="w-full h-auto object-cover relative z-10"
+              priority
+            />
+          )}
         </div>
       </div>
       
