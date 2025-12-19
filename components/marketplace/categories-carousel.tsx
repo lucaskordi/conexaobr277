@@ -73,6 +73,9 @@ export function CategoriesCarousel() {
 
   const getCategoryImage = (categoryName: string): string | null => {
     const name = categoryName.toLowerCase()
+    if (name.includes('tinta')) {
+      return '/tinta.png'
+    }
     if (name.includes('forro') && name.includes('pvc')) {
       return '/pvcat.png'
     }
