@@ -3,6 +3,7 @@
 import { motion } from 'framer-motion'
 import { useState, useEffect } from 'react'
 import Image from 'next/image'
+import { trackWhatsAppClick } from '@/lib/track-whatsapp'
 import Hero from '@/components/hero'
 import ApplicationsCarousel from '@/components/applications-carousel'
 import PanelCarousel from '@/components/panel-carousel'
@@ -268,6 +269,7 @@ export default function Home() {
         >
           <motion.button
             onClick={() => {
+              trackWhatsAppClick('lpwpc-consultant-button')
               const phoneNumber = '5541995278067'
               const message = 'Olá, vim do site. Gostaria de saber mais informações.'
               const url = `https://wa.me/${phoneNumber}?text=${encodeURIComponent(message)}`

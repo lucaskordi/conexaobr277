@@ -2,6 +2,7 @@
 
 import { motion, AnimatePresence } from 'framer-motion'
 import { useState, useEffect, useRef } from 'react'
+import { trackWhatsAppClick } from '@/lib/track-whatsapp'
 
 interface CartItem {
   id: number
@@ -339,6 +340,7 @@ export default function CartSidebar({ isOpen, onClose, items, onRemoveItem, onUp
                     </div>
                     <motion.button
                       onClick={() => {
+                        trackWhatsAppClick('cart-sidebar-old-whatsapp')
                         const phoneNumber = '5541995278067'
                         const itemsList = items.map(item => 
                           `${item.quantity}x ${item.name} ${item.variant || ''}`

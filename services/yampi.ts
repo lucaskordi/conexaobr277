@@ -3,8 +3,6 @@ import { Product, Category, Order } from '@/types'
 const YAMPI_API_URL = process.env.NEXT_PUBLIC_YAMPI_API_URL || 'https://api.dooki.com.br'
 const YAMPI_API_VERSION = process.env.NEXT_PUBLIC_YAMPI_API_VERSION || 'v2'
 const YAMPI_STORE_ALIAS = process.env.NEXT_PUBLIC_YAMPI_STORE_ALIAS || ''
-const YAMPI_USER_TOKEN = process.env.NEXT_PUBLIC_YAMPI_USER_TOKEN || ''
-const YAMPI_USER_SECRET = process.env.NEXT_PUBLIC_YAMPI_USER_SECRET || ''
 
 interface YampiResponse<T> {
   data: T
@@ -43,135 +41,6 @@ interface YampiCategory {
   name: string
   slug: string
   parent_id?: string | number
-}
-
-export async function fetchYampi<T>(endpoint: string, options?: RequestInit): Promise<T> {
-  if (!YAMPI_STORE_ALIAS) {
-    console.warn('YAMPI_STORE_ALIAS não configurada. Configure a variável de ambiente NEXT_PUBLIC_YAMPI_STORE_ALIAS')
-    throw new Error('Yampi Store Alias não configurada')
-  }
-
-  if (!YAMPI_USER_TOKEN || !YAMPI_USER_SECRET) {
-    console.warn('YAMPI_USER_TOKEN ou YAMPI_USER_SECRET não configuradas. Configure as variáveis de ambiente')
-    throw new Error('Yampi credentials não configuradas')
-  }
-
-  const baseUrl = `${YAMPI_API_URL}/${YAMPI_API_VERSION}/${YAMPI_STORE_ALIAS}`
-  const url = `${baseUrl}${endpoint}`
-  
-  const headers: HeadersInit = {
-    'Content-Type': 'application/json',
-    'Accept': 'application/json',
-    'User-Token': YAMPI_USER_TOKEN,
-    'User-Secret-Key': YAMPI_USER_SECRET,
-    ...options?.headers,
-  }
-
-  try {
-    console.log('🌐 Fazendo requisição:', {
-      url,
-      method: options?.method || 'GET',
-    })
-
-    const response = await fetch(url, {
-      ...options,
-      headers,
-    })
-
-    console.log('📥 Resposta recebida:', {
-      status: response.status,
-      statusText: response.statusText,
-      ok: response.ok,
-    })
-
-    if (!response.ok) {
-      let errorText = ''
-      let errorData: any = {}
-      
-      try {
-        errorText = await response.text()
-        console.log('📄 Resposta de erro (texto bruto):', errorText)
-        
-        if (errorText && errorText.trim()) {
-          try {
-            errorData = JSON.parse(errorText)
-            console.log('📄 Resposta de erro (JSON parseado):', errorData)
-          } catch (parseError) {
-            console.log('⚠️ Não foi possível fazer parse do JSON:', parseError)
-            errorData = { 
-              raw: errorText,
-              parseError: parseError instanceof Error ? parseError.message : String(parseError)
-            }
-          }
-        } else {
-          errorData = { message: 'Resposta vazia da API' }
-        }
-      } catch (textError) {
-        console.error('❌ Erro ao ler resposta de erro:', textError)
-        errorData = { 
-          error: 'Não foi possível ler a resposta',
-          textError: textError instanceof Error ? textError.message : String(textError)
-        }
-      }
-      
-      const errorDetails = {
-        status: response.status,
-        statusText: response.statusText,
-        endpoint,
-        url,
-        errorTextLength: errorText?.length || 0,
-        errorText: errorText?.substring(0, 500) || 'Vazio',
-        errorData,
-        responseHeaders: Object.fromEntries(response.headers.entries()),
-      }
-      
-      console.error('❌ Yampi API Error (detalhes completos):', JSON.stringify(errorDetails, null, 2))
-      
-      let errorMessage = ''
-      if (errorData.message) {
-        errorMessage = errorData.message
-      } else if (errorData.error) {
-        errorMessage = errorData.error
-      } else if (errorData.errors && Array.isArray(errorData.errors)) {
-        errorMessage = errorData.errors.map((e: any) => e.message || JSON.stringify(e)).join(', ')
-      } else if (errorData.raw) {
-        errorMessage = errorData.raw
-      } else if (response.statusText) {
-        errorMessage = response.statusText
-      } else {
-        errorMessage = `Erro HTTP ${response.status}`
-      }
-      
-      throw new Error(`Yampi API error (${response.status}): ${errorMessage}`)
-    }
-
-    const data = await response.json()
-    
-    console.log('✅ Dados recebidos:', {
-      hasData: !!data.data,
-      dataType: typeof data.data,
-      isArray: Array.isArray(data.data),
-      keys: Object.keys(data),
-    })
-    
-    if (data.errors && data.errors.length > 0) {
-      console.error('❌ Yampi API Validation Errors:', data.errors)
-      throw new Error(`Yampi validation errors: ${data.errors.map((e: any) => e.message).join(', ')}`)
-    }
-
-    return data
-  } catch (error) {
-    console.error('❌ Erro na requisição fetchYampi:', {
-      error,
-      endpoint,
-      url,
-      errorMessage: error instanceof Error ? error.message : String(error),
-    })
-    if (error instanceof Error) {
-      throw error
-    }
-    throw new Error('Erro desconhecido ao comunicar com a API Yampi')
-  }
 }
 
 function mapYampiProduct(product: any, categories?: Category[]): Product {
@@ -402,12 +271,10 @@ export async function getProducts(params?: {
 }): Promise<{ products: Product[]; totalPages: number; totalCount: number }> {
   try {
     const queryParams = new URLSearchParams()
-    if (params?.categoryId) queryParams.append('category_id[]', String(params.categoryId))
-    if (params?.search) queryParams.append('q', params.search)
+    if (params?.categoryId) queryParams.append('categoryId', String(params.categoryId))
+    if (params?.search) queryParams.append('search', params.search)
     if (params?.page) queryParams.append('page', params.page.toString())
-    if (params?.limit) queryParams.append('per_page', params.limit.toString())
-    queryParams.append('active', '1')
-    queryParams.append('include', 'images,skus,prices,brand,categories,firstImage,texts')
+    if (params?.limit) queryParams.append('limit', params.limit.toString())
 
     let categories: Category[] = []
     try {
@@ -416,22 +283,22 @@ export async function getProducts(params?: {
       console.warn('Erro ao buscar categorias, continuando sem elas:', error)
     }
 
-    const endpoint = queryParams.toString() 
-      ? `/catalog/products?${queryParams.toString()}`
-      : '/catalog/products'
-    
-    console.log('🌐 Fazendo requisição para:', endpoint)
+    const url = `/api/yampi/products${queryParams.toString() ? '?' + queryParams.toString() : ''}`
     
     let response: any
     try {
-      response = await fetchYampi<any>(endpoint)
+      const res = await fetch(url)
+      if (!res.ok) {
+        throw new Error(`API error: ${res.status}`)
+      }
+      response = await res.json()
     } catch (error) {
       console.error('❌ Erro na requisição getProducts:', error)
       throw error
     }
 
     console.log('📦 Resposta completa da API Yampi (getProducts):', {
-      endpoint,
+      url,
       responseKeys: Object.keys(response),
       hasData: !!response.data,
       dataType: Array.isArray(response.data) ? 'array' : typeof response.data,
@@ -536,43 +403,41 @@ export async function getProduct(id: string): Promise<Product | null> {
       console.warn('Erro ao buscar categorias:', error)
     }
 
-    const endpoints = [
-      `/catalog/products/${id}?include=images,skus,prices,brand,categories,firstImage,texts,seo`,
-      `/catalog/products/${id}`,
-      `/catalog/products/${id}/details`,
-      `/products/${id}?include=images,skus,prices,brand,categories,firstImage,texts,seo`,
-      `/products/${id}`,
-      `/products/${id}/details`,
-    ]
-
+    const url = `/api/yampi/product/${id}`
+    
     let productData: any = null
-    let lastError: Error | null = null
 
-    for (const endpoint of endpoints) {
-      try {
-        const response = await fetchYampi<any>(endpoint)
-        console.log(`✅ Endpoint ${endpoint} retornou dados:`, {
-          hasData: !!response.data,
-          keys: response.data ? Object.keys(response.data) : Object.keys(response),
-        })
-
-        productData = response.data || response.product || response
-
-        if (productData && productData.id) {
-          if (productData.data && productData.data.id) {
-            productData = productData.data
-          }
-          break
+    try {
+      const res = await fetch(url)
+      if (!res.ok) {
+        if (res.status === 404) {
+          console.warn('Produto não encontrado (404):', id)
+          return null
         }
-      } catch (error) {
-        lastError = error instanceof Error ? error : new Error(String(error))
-        console.log(`❌ Endpoint ${endpoint} falhou:`, lastError.message)
-        continue
+        const errorText = await res.text()
+        console.error('Erro ao buscar produto:', res.status, errorText)
+        throw new Error(`API error: ${res.status} - ${errorText}`)
       }
-    }
+      const response = await res.json()
+      console.log('📥 Resposta da API route:', {
+        hasData: !!response.data,
+        responseKeys: Object.keys(response),
+        error: response.error,
+      })
+      
+      if (response.error) {
+        console.error('Erro na resposta da API:', response.error)
+        return null
+      }
+      
+      productData = response.data
 
-    if (!productData || !productData.id) {
-      console.warn('Produto não encontrado em nenhum endpoint:', id, lastError)
+      if (!productData || !productData.id) {
+        console.warn('Resposta sem dados de produto válidos:', response)
+        return null
+      }
+    } catch (error) {
+      console.error('Error fetching product:', error)
       return null
     }
 
@@ -640,16 +505,18 @@ export async function getProduct(id: string): Promise<Product | null> {
 
 export async function getCategories(): Promise<Category[]> {
   try {
-    const response = await fetchYampi<YampiResponse<YampiCategory[]>>(
-      '/catalog/categories'
-    )
+    const res = await fetch('/api/yampi/categories')
+    if (!res.ok) {
+      throw new Error(`API error: ${res.status}`)
+    }
+    const response = await res.json()
 
     if (!response.data || !Array.isArray(response.data)) {
-      console.warn('Resposta da API Yampi não contém array de categorias:', response)
+      console.warn('Resposta da API não contém array de categorias:', response)
       return []
     }
 
-    const categories = response.data.map(cat => ({
+    const categories = response.data.map((cat: any) => ({
       id: String(cat.id),
       name: cat.name,
       slug: cat.slug,
@@ -657,12 +524,12 @@ export async function getCategories(): Promise<Category[]> {
     }))
 
     const categoryMap = new Map<string, Category>()
-    categories.forEach(cat => {
+    categories.forEach((cat: any) => {
       categoryMap.set(cat.id, { ...cat, children: [] })
     })
 
     const rootCategories: Category[] = []
-    categories.forEach(cat => {
+    categories.forEach((cat: any) => {
       const category = categoryMap.get(cat.id)!
       if (cat.parentId) {
         const parent = categoryMap.get(cat.parentId)
@@ -683,59 +550,8 @@ export async function getCategories(): Promise<Category[]> {
 }
 
 export async function createProduct(product: Partial<Product>): Promise<Product | null> {
-  try {
-    const yampiProduct: any = {
-      name: product.name,
-      description: product.description || '',
-      price: product.price,
-      status: 'active',
-    }
-
-    if (product.compareAtPrice) {
-      yampiProduct.compare_at_price = product.compareAtPrice
-    }
-
-    if (product.categoryId) {
-      yampiProduct.category_id = product.categoryId
-    }
-
-    if (product.stock !== undefined) {
-      yampiProduct.stock = product.stock
-    }
-
-    if (product.sku) {
-      yampiProduct.sku = product.sku
-    }
-
-    if (product.images && product.images.length > 0) {
-      yampiProduct.images = product.images.map(url => ({ url }))
-    }
-
-    const response = await fetchYampi<YampiResponse<YampiProduct>>(
-      '/catalog/products',
-      {
-        method: 'POST',
-        body: JSON.stringify(yampiProduct),
-      }
-    )
-
-    if (!response.data) {
-      console.error('Produto criado mas resposta vazia:', response)
-      return null
-    }
-
-    let categories: Category[] = []
-    try {
-      categories = await getCategories()
-    } catch (error) {
-      console.warn('Erro ao buscar categorias após criar produto:', error)
-    }
-
-    return mapYampiProduct(response.data, categories)
-  } catch (error) {
-    console.error('Error creating product:', error)
-    return null
-  }
+  console.warn('createProduct não está disponível - precisa ser implementado via API route server-side')
+  return null
 }
 
 export async function getCheckoutUrl(items: Array<{ productId: string; skuId?: string; quantity: number }>): Promise<string | null> {
@@ -744,116 +560,23 @@ export async function getCheckoutUrl(items: Array<{ productId: string; skuId?: s
       return null
     }
 
-    const storeUrl = process.env.NEXT_PUBLIC_YAMPI_STORE_URL || `https://www.studiomyt.com.br`
-    let secureDomain = process.env.NEXT_PUBLIC_YAMPI_SECURE_DOMAIN
-    
     console.log(`🛒 Processando ${items.length} item(ns) para checkout...`)
     console.log(`📋 Itens recebidos:`, items.map(i => ({ productId: i.productId, skuId: i.skuId, quantity: i.quantity })))
-    
-    if (!secureDomain) {
-      try {
-        const firstItem = items[0]
-        const firstProduct = await fetchYampi<any>(`/catalog/products/${firstItem.productId}?include=skus`)
-        const firstProductData = firstProduct.data || firstProduct
-        
-        if (firstProductData.skus && firstProductData.skus.data && firstProductData.skus.data.length > 0) {
-          const firstSku = firstProductData.skus.data[0]
-          if (firstSku.purchase_url) {
-            // Extrair domínio de purchase_url (ex: https://seguro.studiomyt.com.br/r/TOKEN)
-            const urlMatch = firstSku.purchase_url.match(/https?:\/\/([^\/]+)/)
-            if (urlMatch) {
-              secureDomain = urlMatch[1]
-              console.log('✅ Domínio seguro extraído:', secureDomain)
-            }
-          }
-        }
-      } catch (error) {
-        console.warn('⚠️ Erro ao extrair domínio seguro, usando padrão')
-      }
-    }
-    
-    // Fallback para domínio padrão se não conseguir extrair
-    if (!secureDomain) {
-      // Tentar construir baseado no store alias ou usar padrão
-      secureDomain = `seguro.${YAMPI_STORE_ALIAS || 'studiomyt.com.br'}`
-    }
-    
-    const secureBaseUrl = `https://${secureDomain}`
-    
-    try {
-      // Buscar informações de todos os produtos para obter os tokens dos SKUs
-      const productInfos = await Promise.all(
-        items.map(async (item) => {
-          try {
-            console.log(`🔍 Buscando produto ${item.productId} com SKU ${item.skuId}...`)
-            const fullProduct = await fetchYampi<any>(`/catalog/products/${item.productId}?include=skus`)
-            const productData = fullProduct.data || fullProduct
-            
-            if (productData.skus && productData.skus.data && productData.skus.data.length > 0) {
-              const sku = productData.skus.data.find((s: any) => 
-                String(s.id) === String(item.skuId) || s.sku === item.skuId
-              ) || productData.skus.data[0]
-              
-              if (sku && sku.token) {
-                console.log(`✅ Token encontrado para produto ${item.productId}: ${sku.token} (quantidade: ${item.quantity})`)
-                return {
-                  token: sku.token,
-                  skuId: sku.id,
-                  quantity: item.quantity,
-                  purchaseUrl: sku.purchase_url,
-                }
-              } else {
-                console.warn(`⚠️ SKU sem token para produto ${item.productId}`)
-              }
-            } else {
-              console.warn(`⚠️ Produto ${item.productId} sem SKUs`)
-            }
-            
-            return null
-          } catch (error) {
-            console.error(`❌ Erro ao buscar produto ${item.productId}:`, error)
-            return null
-          }
-        })
-      )
 
-      const validItems = productInfos.filter(Boolean) as Array<{ token: string; skuId: number; quantity: number; purchaseUrl?: string }>
-      
-      console.log(`📦 Itens válidos encontrados: ${validItems.length} de ${items.length}`)
-      
-      if (validItems.length > 0) {
-        // Formato Yampi: TOKEN1:QTY1,TOKEN2:QTY2,TOKEN3:QTY3
-        const tokensWithQuantities = validItems.map(item => `${item.token}:${item.quantity}`).join(',')
-        const checkoutUrl = `${secureBaseUrl}/r/${tokensWithQuantities}`
-        
-        console.log('✅ URL de checkout gerada (formato Yampi):', checkoutUrl)
-        console.log('📦 Itens no checkout:', validItems.map(t => ({ 
-          token: t.token, 
-          quantity: t.quantity,
-          skuId: t.skuId 
-        })))
-        
-        return checkoutUrl
-      } else {
-        console.error('❌ Nenhum item válido encontrado para checkout')
-      }
-    } catch (error) {
-      console.error('❌ Erro ao construir URL de checkout com múltiplos produtos:', error)
+    const res = await fetch('/api/yampi/checkout-url', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ items }),
+    })
+
+    if (!res.ok) {
+      throw new Error(`API error: ${res.status}`)
     }
 
-    // Fallback: usar URL do primeiro produto ou checkout geral
-    const firstItem = items[0]
-    const fullProduct = await fetchYampi<any>(`/catalog/products/${firstItem.productId}?include=skus`)
-    const productData = fullProduct.data || fullProduct
-
-    if (productData.redirect_url_card) {
-      console.log('⚠️ Usando redirect_url_card do primeiro produto como fallback:', productData.redirect_url_card)
-      return productData.redirect_url_card
-    }
-
-    const checkoutUrl = `${secureBaseUrl}/checkout`
-    console.log('⚠️ Usando URL base de checkout como fallback:', checkoutUrl)
-    return checkoutUrl
+    const data = await res.json()
+    return data.url || null
   } catch (error) {
     console.error('Error generating checkout URL:', error)
     return null
@@ -861,46 +584,8 @@ export async function getCheckoutUrl(items: Array<{ productId: string; skuId?: s
 }
 
 export async function createOrder(order: Order): Promise<{ id: string; status: string } | null> {
-  try {
-    const yampiOrder = {
-      customer: {
-        name: order.customer.name,
-        email: order.customer.email,
-        phone: order.customer.phone,
-        address: order.customer.address,
-        city: order.customer.city,
-        state: order.customer.state,
-        zip_code: order.customer.zipCode,
-      },
-      items: order.items.map(item => ({
-        product_id: item.productId,
-        variant_id: item.variantId,
-        quantity: item.quantity,
-        price: item.price,
-      })),
-      subtotal: order.subtotal,
-      shipping_cost: order.shipping,
-      total: order.total,
-    }
-
-    const response = await fetchYampi<YampiResponse<{ id: string; status: string }>>(
-      '/orders',
-      {
-        method: 'POST',
-        body: JSON.stringify(yampiOrder),
-      }
-    )
-
-    if (!response.data) {
-      console.error('Pedido criado mas resposta vazia:', response)
-      return null
-    }
-
-    return response.data
-  } catch (error) {
-    console.error('Error creating order:', error)
-    return null
-  }
+  console.warn('createOrder não está disponível - precisa ser implementado via API route server-side')
+  return null
 }
 
 export async function syncProducts(): Promise<{ success: boolean; count: number; errors: string[] }> {
@@ -920,42 +605,16 @@ export async function syncProducts(): Promise<{ success: boolean; count: number;
 
 export async function testConnection(): Promise<{ success: boolean; message: string }> {
   try {
-    if (!YAMPI_STORE_ALIAS) {
+    const res = await fetch('/api/yampi/categories')
+    if (res.ok) {
       return {
-        success: false,
-        message: 'YAMPI_STORE_ALIAS não configurada. Configure a variável de ambiente NEXT_PUBLIC_YAMPI_STORE_ALIAS',
+        success: true,
+        message: 'Conexão com a API Yampi estabelecida com sucesso!',
       }
     }
-
-    if (!YAMPI_USER_TOKEN || !YAMPI_USER_SECRET) {
-      return {
-        success: false,
-        message: 'YAMPI_USER_TOKEN ou YAMPI_USER_SECRET não configuradas. Configure as variáveis de ambiente',
-      }
-    }
-
-    const baseUrl = `${YAMPI_API_URL}/${YAMPI_API_VERSION}/${YAMPI_STORE_ALIAS}`
-    const response = await fetch(`${baseUrl}/catalog/brands`, {
-      method: 'GET',
-      headers: {
-        'Content-Type': 'application/json',
-        'Accept': 'application/json',
-        'Alias': YAMPI_STORE_ALIAS,
-        'User-Token': YAMPI_USER_TOKEN,
-        'User-Secret-Key': YAMPI_USER_SECRET,
-      },
-    })
-
-    if (!response.ok) {
-      const errorData = await response.json().catch(() => ({}))
-      throw new Error(errorData.message || `HTTP ${response.status}: ${response.statusText}`)
-    }
-
-    await response.json()
-    
     return {
-      success: true,
-      message: 'Conexão com a API Yampi estabelecida com sucesso!',
+      success: false,
+      message: 'Erro ao conectar com a API Yampi',
     }
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido'
@@ -1062,10 +721,11 @@ export async function calculateShippingCost(request: ShippingCostRequest): Promi
         
         console.log('📝 Tentando criar pedido temporário:', JSON.stringify(tempOrderData, null, 2))
         
-        const tempOrderResponse = await fetchYampi<any>('/orders', {
+        const tempOrderResponse = await fetch('/api/yampi/order', {
           method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(tempOrderData),
-        })
+        }).then(r => r.json()).catch(() => null)
         
         console.log('📦 Resposta da criação de pedido:', JSON.stringify(tempOrderResponse, null, 2))
         
@@ -1106,8 +766,6 @@ export async function calculateShippingCost(request: ShippingCostRequest): Promi
     console.log('📋 Campos no requestBody:', Object.keys(requestBody))
     console.log('📋 order_id incluído?', 'order_id' in requestBody, 'valor:', requestBody.order_id)
 
-    const fullUrl = `${YAMPI_API_URL}/${YAMPI_API_VERSION}/${YAMPI_STORE_ALIAS}/logistics/shipping-costs`
-    
     console.log('🚚 Calculando frete - Dados enviados:', {
       zipcode: cleanZipcode,
       total: request.total,
@@ -1117,25 +775,17 @@ export async function calculateShippingCost(request: ShippingCostRequest): Promi
       origin: request.origin || 'product_page',
     })
 
-    console.log('📤 Corpo da requisição (JSON):', JSON.stringify(requestBody, null, 2))
-    console.log('📤 Tipos dos dados:', {
-      zipcode: typeof requestBody.zipcode,
-      total: typeof requestBody.total,
-      skus_ids: Array.isArray(requestBody.skus_ids) ? requestBody.skus_ids.map((id: any) => typeof id) : 'não é array',
-      quantities: Array.isArray(requestBody.quantities) ? requestBody.quantities.map((qty: any) => typeof qty) : 'não é array',
-      origin: typeof requestBody.origin,
-    })
-    console.log('📤 URL completa:', fullUrl)
-    console.log('📤 Headers:', {
-      'Content-Type': 'application/json',
-      'User-Token': YAMPI_USER_TOKEN ? '***' : 'não configurado',
-      'User-Secret-Key': YAMPI_USER_SECRET ? '***' : 'não configurado',
-    })
-
-    const response = await fetchYampi<any>('/logistics/shipping-costs', {
+    const res = await fetch('/api/yampi/shipping-cost', {
       method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(requestBody),
     })
+
+    if (!res.ok) {
+      throw new Error(`API error: ${res.status}`)
+    }
+
+    const response = await res.json()
 
     console.log('📦 Resposta completa do cálculo de frete:', JSON.stringify(response, null, 2))
 

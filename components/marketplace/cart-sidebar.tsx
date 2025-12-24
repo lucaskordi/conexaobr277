@@ -7,6 +7,7 @@ import { X, Plus, Minus, Trash2, ShoppingBag } from 'lucide-react'
 import Image from 'next/image'
 import { getCheckoutUrl } from '@/services/yampi'
 import { LoadingSpinner } from '../ui/loading-spinner'
+import { trackWhatsAppClick } from '@/lib/track-whatsapp'
 
 export function CartSidebar() {
   const items = useCartStore((state) => state.items)
@@ -82,6 +83,7 @@ export function CartSidebar() {
   }
 
   const handleWhatsAppBulk = () => {
+    trackWhatsAppClick('cart-modal-bulk-purchase')
     const phoneNumber = '5541995278067'
     const itemsList = items.map(item => 
       `${item.quantity}x ${item.name}${item.variantName ? ` (${item.variantName})` : ''}`
@@ -320,6 +322,7 @@ export function CartSidebar() {
             <button
               type="button"
               onClick={() => {
+                trackWhatsAppClick('cart-sidebar-whatsapp')
                 const phoneNumber = '5541995278067'
                 const isMultiple = items.length > 1
                 const greeting = isMultiple 

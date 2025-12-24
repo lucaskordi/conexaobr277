@@ -1,12 +1,14 @@
 'use client'
 
 import { motion } from 'framer-motion'
+import { trackWhatsAppClick } from '@/lib/track-whatsapp'
 
 export default function WhatsAppButton() {
   const phoneNumber = '5541995278067'
   const message = 'Olá! Gostaria de saber mais sobre os painéis.'
 
   const handleClick = () => {
+    trackWhatsAppClick('whatsapp-button-floating')
     const url = `https://wa.me/${phoneNumber}?text=${encodeURIComponent(message)}`
     window.open(url, '_blank')
   }

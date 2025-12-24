@@ -21,23 +21,33 @@ Crie um arquivo `.env.local` na raiz do projeto:
 NEXT_PUBLIC_YAMPI_API_URL=https://api.dooki.com.br
 NEXT_PUBLIC_YAMPI_API_VERSION=v2
 NEXT_PUBLIC_YAMPI_STORE_ALIAS=seu_alias_aqui
-NEXT_PUBLIC_YAMPI_USER_TOKEN=seu_user_token_aqui
-NEXT_PUBLIC_YAMPI_USER_SECRET=seu_user_secret_aqui
+YAMPI_API_URL=https://api.dooki.com.br
+YAMPI_API_VERSION=v2
+YAMPI_STORE_ALIAS=seu_alias_aqui
+YAMPI_USER_TOKEN=seu_user_token_aqui
+YAMPI_USER_SECRET=seu_user_secret_aqui
+NEXT_PUBLIC_SITE_URL=https://conexaobr277.com.br
 ```
 
-**Variáveis obrigatórias:**
-- `NEXT_PUBLIC_YAMPI_STORE_ALIAS` - Alias da sua loja
-- `NEXT_PUBLIC_YAMPI_USER_TOKEN` - Token de usuário
-- `NEXT_PUBLIC_YAMPI_USER_SECRET` - Chave secreta
+**Variáveis obrigatórias (Server-Side - SEM NEXT_PUBLIC_):**
+- `YAMPI_STORE_ALIAS` - Alias da sua loja (usado apenas no servidor)
+- `YAMPI_USER_TOKEN` - Token de usuário (usado apenas no servidor - SEGURO)
+- `YAMPI_USER_SECRET` - Chave secreta (usada apenas no servidor - SEGURO)
 
-**Variáveis opcionais:**
-- `NEXT_PUBLIC_YAMPI_API_URL` - URL base da API (padrão: https://api.dooki.com.br)
-- `NEXT_PUBLIC_YAMPI_API_VERSION` - Versão da API (padrão: v2)
+**Variáveis opcionais (Server-Side):**
+- `YAMPI_API_URL` - URL base da API (padrão: https://api.dooki.com.br)
+- `YAMPI_API_VERSION` - Versão da API (padrão: v2)
 
-**Importante:**
-- As variáveis devem começar com `NEXT_PUBLIC_` para serem acessíveis no cliente
+**Variáveis públicas (Client-Side - COM NEXT_PUBLIC_):**
+- `NEXT_PUBLIC_YAMPI_STORE_ALIAS` - Alias da loja (apenas para referência)
+- `NEXT_PUBLIC_YAMPI_API_URL` - URL base (apenas para referência)
+- `NEXT_PUBLIC_YAMPI_API_VERSION` - Versão (apenas para referência)
+
+**⚠️ IMPORTANTE - SEGURANÇA:**
+- **NUNCA** use `NEXT_PUBLIC_` nas credenciais sensíveis (TOKEN e SECRET)
+- Credenciais sensíveis (`YAMPI_USER_TOKEN` e `YAMPI_USER_SECRET`) devem **SEMPRE** ser sem `NEXT_PUBLIC_`
+- As credenciais sensíveis ficam apenas no servidor e nunca são expostas ao cliente
 - Nunca commite o arquivo `.env.local` no Git
-- O arquivo `.env.example` já está configurado como template
 
 ### 3. Reiniciar o Servidor
 

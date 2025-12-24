@@ -32,9 +32,18 @@ Crie um arquivo `.env.local` na raiz do projeto:
 NEXT_PUBLIC_YAMPI_API_URL=https://api.dooki.com.br
 NEXT_PUBLIC_YAMPI_API_VERSION=v2
 NEXT_PUBLIC_YAMPI_STORE_ALIAS=seu_alias_aqui
-NEXT_PUBLIC_YAMPI_USER_TOKEN=seu_user_token_aqui
-NEXT_PUBLIC_YAMPI_USER_SECRET=seu_user_secret_aqui
+YAMPI_API_URL=https://api.dooki.com.br
+YAMPI_API_VERSION=v2
+YAMPI_STORE_ALIAS=seu_alias_aqui
+YAMPI_USER_TOKEN=seu_user_token_aqui
+YAMPI_USER_SECRET=seu_user_secret_aqui
+NEXT_PUBLIC_SITE_URL=https://conexaobr277.com.br
 ```
+
+**⚠️ IMPORTANTE - SEGURANÇA:**
+- Credenciais sensíveis (`YAMPI_USER_TOKEN` e `YAMPI_USER_SECRET`) **NÃO** devem ter `NEXT_PUBLIC_`
+- Essas variáveis ficam apenas no servidor e nunca são expostas ao cliente
+- As variáveis com `NEXT_PUBLIC_` são apenas para referência pública (não sensíveis)
 
 **Onde obter as credenciais:**
 - Acesse o painel da Yampi: https://www.yampi.com.br/

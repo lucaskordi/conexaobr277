@@ -9,6 +9,7 @@ import { getCheckoutUrl } from '@/services/yampi'
 import Image from 'next/image'
 import { ArrowLeft, Trash2, Plus, Minus, X } from 'lucide-react'
 import { LoadingSpinner } from '@/components/ui/loading-spinner'
+import { trackWhatsAppClick } from '@/lib/track-whatsapp'
 
 export default function CheckoutPage() {
   const router = useRouter()
@@ -101,6 +102,7 @@ export default function CheckoutPage() {
   }
 
   const handleWhatsAppBulk = () => {
+    trackWhatsAppClick('checkout-modal-bulk-purchase')
     const phoneNumber = '5541995278067'
     const itemsList = items.map(item => 
       `${item.quantity}x ${item.name}${item.variantName ? ` (${item.variantName})` : ''}`
