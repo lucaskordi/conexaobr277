@@ -516,19 +516,19 @@ export default function ProductPage() {
           setIsLoadingRelated(true)
           if (product?.categoryId) {
             getProducts({ categoryId: product.categoryId, limit: 12 }).then((result) => {
-              const filtered = result.products.filter(prod => prod.id !== product.id)
+              const filtered = result.products.filter(prod => prod.id !== product?.id)
               if (filtered.length > 0) {
                 setRelatedProducts(filtered.slice(0, 6))
               } else {
                 getProducts({ limit: 12 }).then((allResult) => {
-                  const allFiltered = allResult.products.filter(prod => prod.id !== product.id)
+                  const allFiltered = allResult.products.filter(prod => prod.id !== product?.id)
                   setRelatedProducts(allFiltered.slice(0, 6))
                 })
               }
               setIsLoadingRelated(false)
             }).catch(() => {
               getProducts({ limit: 12 }).then((allResult) => {
-                const allFiltered = allResult.products.filter(prod => prod.id !== product.id)
+                const allFiltered = allResult.products.filter(prod => prod.id !== product?.id)
                 setRelatedProducts(allFiltered.slice(0, 6))
                 setIsLoadingRelated(false)
               }).catch(() => {
@@ -537,7 +537,7 @@ export default function ProductPage() {
             })
           } else {
             getProducts({ limit: 12 }).then((result) => {
-              const filtered = result.products.filter(prod => prod.id !== product.id)
+              const filtered = result.products.filter(prod => prod.id !== product?.id)
               setRelatedProducts(filtered.slice(0, 6))
               setIsLoadingRelated(false)
             }).catch(() => {
