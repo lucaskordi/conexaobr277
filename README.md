@@ -38,6 +38,7 @@ YAMPI_STORE_ALIAS=seu_alias_aqui
 YAMPI_USER_TOKEN=seu_user_token_aqui
 YAMPI_USER_SECRET=seu_user_secret_aqui
 NEXT_PUBLIC_SITE_URL=https://conexaobr277.com.br
+NEXT_PUBLIC_GA_MEASUREMENT_ID=GA_MEASUREMENT_ID
 ```
 
 **⚠️ IMPORTANTE - SEGURANÇA:**
@@ -51,6 +52,20 @@ NEXT_PUBLIC_SITE_URL=https://conexaobr277.com.br
 - Copie o **Alias**, **User Token** e **User Secret Key**
 
 Para mais detalhes, consulte o arquivo `YAMPI_INTEGRATION.md`.
+
+## Google Analytics Setup
+
+Para configurar o Google Analytics:
+
+1. Acesse [Google Analytics](https://analytics.google.com/)
+2. Crie uma propriedade ou use uma existente
+3. Copie o **Measurement ID** (formato: G-XXXXXXXXXX)
+4. Adicione ao arquivo `.env.local`:
+```env
+NEXT_PUBLIC_GA_MEASUREMENT_ID=G-XXXXXXXXXX
+```
+
+O código de rastreamento será automaticamente incluído em todas as páginas.
 
 3. Execute o servidor de desenvolvimento:
 ```bash

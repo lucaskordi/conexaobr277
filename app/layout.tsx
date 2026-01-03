@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Montserrat } from "next/font/google";
+import { GoogleAnalytics } from "@/components/google-analytics";
 import "./globals.css";
 
 const montserrat = Montserrat({
@@ -121,6 +122,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="pt-BR" suppressHydrationWarning>
+      <GoogleAnalytics />
       <body
         className={`${montserrat.variable} antialiased`}
         suppressHydrationWarning

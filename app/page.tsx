@@ -126,14 +126,14 @@ export default function Home() {
               />
             </Link>
           ) : (
-            <Image
-              src="/suv.png"
-              alt="Suvinil"
-              width={1920}
-              height={600}
-              className="w-full h-auto object-cover relative z-10"
-              priority
-            />
+          <Image
+            src="/suv.png"
+            alt="Suvinil"
+            width={1920}
+            height={600}
+            className="w-full h-auto object-cover relative z-10"
+            priority
+          />
           )}
         </div>
       </div>
