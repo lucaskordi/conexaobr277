@@ -482,100 +482,127 @@ export default function ProductPage() {
   }, [product?.variants])
 
   useEffect(() => {
-    if (params.slug) {
-      const slugParam = params.slug as string
+    if (params.slug && Array.isArray(params.slug)) {
+      const slugArray = params.slug as string[]
 
-      // Lista de rotas existentes que não são produtos
-      const existingRoutes = [
-        'products', 'checkout', 'admin', 'api', 'lpwpc', 'politicas',
-        'order-success', 'test-yampi', 'debug-products', 'not-found'
-      ]
+      // Verificar se a URL termina com 'p'
+      if (slugArray.length >= 2 && slugArray[slugArray.length - 1] === 'p') {
+        // Remover o 'p' do final e juntar o restante como slug
+        const slug = slugArray.slice(0, -1).join('/')
 
-      // Se for uma rota existente, não tentar buscar como produto
-      if (existingRoutes.includes(slugParam)) {
-        setIsLoading(false)
-        return
-      }
+        // Lista de rotas existentes que não são produtos
+        const existingRoutes = [
+          'products', 'checkout', 'admin', 'api', 'lpwpc', 'politicas',
+          'order-success', 'test-yampi', 'debug-products', 'not-found'
+        ]
 
-      // Verificar se o parâmetro é um ID numérico (compatibilidade com links antigos)
-      const isNumericId = /^\d+$/.test(slugParam)
-
-      if (isNumericId) {
-        // Se é um ID numérico, buscar o produto por ID e redirecionar para o slug
-        getProduct(slugParam).then((product) => {
-          if (product && product.slug) {
-            router.replace(`/${product.slug}`)
-          } else {
-            setIsLoading(false)
-          }
-        }).catch(() => {
-          setIsLoading(false)
-        })
-        return
-      }
-
-      // Se não é ID numérico, buscar normalmente por slug
-      getProductBySlug(slugParam).then((p) => {
-        if (!p) {
+        // Se for uma rota existente, não tentar buscar como produto
+        if (existingRoutes.includes(slug)) {
           setIsLoading(false)
           return
         }
-        setProduct(p)
-        setSelectedColor(null)
-        setSelectedSize(null)
-        if (p.variants && p.variants.length > 0) {
-          const grouped = groupVariants(p.variants)
-          if (grouped.colors.length > 0) {
-            setSelectedColor(grouped.colors[0].value)
+
+        // Verificar se o parâmetro é um ID numérico (compatibilidade com links antigos)
+        const isNumericId = /^\d+$/.test(slug)
+
+        if (isNumericId) {
+          // Se é um ID numérico, buscar o produto por ID e redirecionar para a URL com slug
+          getProduct(slug).then((product) => {
+            if (product && product.slug) {
+              router.replace(`/${product.slug}/p`)
+            } else {
+              setIsLoading(false)
+            }
+          }).catch(() => {
+            setIsLoading(false)
+          })
+          return
+        }
+
+        // Se não é ID numérico, buscar normalmente por slug
+        getProductBySlug(slug).then((p) => {
+          if (!p) {
+            setIsLoading(false)
+            return
           }
-          if (grouped.sizes.length > 0) {
-            setSelectedSize(grouped.sizes[0].value)
-          }
-          if (grouped.colors.length > 0 || grouped.sizes.length > 0) {
-            const initialVariant = findVariantByAttributes(p.variants, grouped.colors[0]?.value || null, grouped.sizes[0]?.value || null)
-            if (initialVariant) {
-              setSelectedVariant(initialVariant.id)
+          setProduct(p)
+          setSelectedColor(null)
+          setSelectedSize(null)
+          if (p.variants && p.variants.length > 0) {
+            const grouped = groupVariants(p.variants)
+            if (grouped.colors.length > 0) {
+              setSelectedColor(grouped.colors[0].value)
+            }
+            if (grouped.sizes.length > 0) {
+              setSelectedSize(grouped.sizes[0].value)
+            }
+            if (grouped.colors.length > 0 || grouped.sizes.length > 0) {
+              const initialVariant = findVariantByAttributes(p.variants, grouped.colors[0]?.value || null, grouped.sizes[0]?.value || null)
+              if (initialVariant) {
+                setSelectedVariant(initialVariant.id)
+              } else {
+                setSelectedVariant(p.variants[0].id)
+              }
             } else {
               setSelectedVariant(p.variants[0].id)
             }
-          } else {
-            setSelectedVariant(p.variants[0].id)
           }
-        }
-        setIsLoading(false)
+          setIsLoading(false)
 
-        setIsLoadingRelated(true)
-        if (p.categoryId) {
-          getProducts({ categoryId: p.categoryId, limit: 12 }).then((result) => {
-            const filtered = result.products.filter(prod => prod.id !== p?.id)
-            if (filtered.length > 0) {
-              setRelatedProducts(filtered.slice(0, 6))
-            } else {
+          setIsLoadingRelated(true)
+          if (p.categoryId) {
+            getProducts({ categoryId: p.categoryId, limit: 12 }).then((result) => {
+              const filtered = result.products.filter(prod => prod.id !== p?.id)
+              if (filtered.length > 0) {
+                setRelatedProducts(filtered.slice(0, 6))
+              } else {
+                getProducts({ limit: 12 }).then((allResult) => {
+                  const allFiltered = allResult.products.filter(prod => prod.id !== p?.id)
+                  setRelatedProducts(allFiltered.slice(0, 6))
+                })
+              }
+              setIsLoadingRelated(false)
+            }).catch(() => {
               getProducts({ limit: 12 }).then((allResult) => {
                 const allFiltered = allResult.products.filter(prod => prod.id !== p?.id)
                 setRelatedProducts(allFiltered.slice(0, 6))
+                setIsLoadingRelated(false)
+              }).catch(() => {
+                setIsLoadingRelated(false)
               })
-            }
-            setIsLoadingRelated(false)
-          }).catch(() => {
-            getProducts({ limit: 12 }).then((allResult) => {
-              const allFiltered = allResult.products.filter(prod => prod.id !== p?.id)
-              setRelatedProducts(allFiltered.slice(0, 6))
+            })
+          } else {
+            getProducts({ limit: 12 }).then((result) => {
+              const filtered = result.products.filter(prod => prod.id !== p?.id)
+              setRelatedProducts(filtered.slice(0, 6))
               setIsLoadingRelated(false)
             }).catch(() => {
               setIsLoadingRelated(false)
             })
-          })
-        } else {
-          getProducts({ limit: 12 }).then((result) => {
-            const filtered = result.products.filter(prod => prod.id !== p?.id)
-            setRelatedProducts(filtered.slice(0, 6))
-            setIsLoadingRelated(false)
-          }).catch(() => {
-            setIsLoadingRelated(false)
-          })
+          }
+        })
+      } else {
+        // URL não termina com /p, verificar se é uma rota existente ou redirecionar
+        const fullSlug = slugArray.join('/')
+        const existingRoutes = [
+          'products', 'checkout', 'admin', 'api', 'lpwpc', 'politicas',
+          'order-success', 'test-yampi', 'debug-products', 'not-found'
+        ]
+
+        if (existingRoutes.includes(fullSlug)) {
+          setIsLoading(false)
+          return
         }
-      })
+
+        // Se não é rota existente, redirecionar para a versão com /p
+        if (fullSlug) {
+          router.replace(`/${fullSlug}/p`)
+        } else {
+          setIsLoading(false)
+        }
+      }
+    } else {
+      setIsLoading(false)
     }
   }, [params.slug, router])
 
@@ -995,7 +1022,7 @@ export default function ProductPage() {
                   {relatedProducts.slice(0, 3).map((product) => (
                     <Link 
                       key={product.id} 
-                      href={`/${product.slug}`}
+                      href={`/p/${product.slug}/p`}
                       className="block"
                     >
                       <div className="bg-white rounded-lg shadow-md border border-gray-200 overflow-hidden hover:shadow-lg transition-all h-full flex flex-col">

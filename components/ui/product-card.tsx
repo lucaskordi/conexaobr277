@@ -72,7 +72,7 @@ export function ProductCard({ product }: ProductCardProps) {
 
   return (
     <div className="group relative bg-white rounded-lg shadow-md border border-gray-200 overflow-hidden hover:shadow-xl hover:shadow-brand-yellow/20 transition-all duration-300 hover:-translate-y-1 h-full flex flex-col">
-      <Link href={`/${product.slug || product.id}`} className="block flex-shrink-0">
+      <Link href={`/${product.slug || product.id}/p`} className="block flex-shrink-0">
         <div 
           className="relative aspect-square w-full overflow-hidden bg-gray-100"
           onMouseEnter={() => setIsHovered(true)}
@@ -149,7 +149,7 @@ export function ProductCard({ product }: ProductCardProps) {
       </Link>
       
       <div className="p-4 flex flex-col flex-grow">
-        <Link href={`/${product.slug || product.id}`}>
+        <Link href={`/${product.slug || product.id}/p`}>
           <h3 className="font-semibold text-brand-blue mb-1 line-clamp-2 group-hover:text-brand-yellow transition-colors min-h-[3rem]">
             {product.name}
           </h3>

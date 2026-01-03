@@ -486,7 +486,7 @@ export default function ProductPage() {
       // Buscar o produto por ID e redirecionar para a URL com slug
       getProduct(params.id as string).then((product) => {
         if (product && product.slug) {
-          router.replace(`/${product.slug}`)
+          router.replace(`/p/${product.slug}`)
         } else {
           // Se não tem slug, manter na URL antiga por enquanto
           setProduct(product)
@@ -967,7 +967,7 @@ export default function ProductPage() {
                   {relatedProducts.slice(0, 3).map((product) => (
                     <Link 
                       key={product.id} 
-                      href={`/${product.slug}`}
+                      href={`/${product.slug}/p`}
                       className="block"
                     >
                       <div className="bg-white rounded-lg shadow-md border border-gray-200 overflow-hidden hover:shadow-lg transition-all h-full flex flex-col">
