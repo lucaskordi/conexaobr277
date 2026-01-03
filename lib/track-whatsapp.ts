@@ -12,3 +12,4 @@ export function trackWhatsAppClick(source: string) {
     console.error('Error tracking WhatsApp click:', error)
   })
 }
+

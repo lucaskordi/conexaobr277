@@ -44,3 +44,4 @@ export async function fetchYampiServer<T>(endpoint: string, options?: RequestIni
 
   return response.json()
 }
+
