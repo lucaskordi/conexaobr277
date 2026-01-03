@@ -69,7 +69,15 @@ export default function Footer() {
             </motion.a>
           </motion.div>
         </div>
-        <div className="mt-8 pt-8 border-t border-white/10 text-center text-white/80 text-sm">
+        <div className="mt-8 pt-8 border-t border-white/10 text-center text-white/80 text-sm space-y-2">
+          <p>
+            <a
+              href="/politicas"
+              className="underline hover:text-white transition-colors duration-200"
+            >
+              Política de Trocas e Devoluções
+            </a>
+          </p>
           <p>© {new Date().getFullYear()} Conexão BR277. Todos os direitos reservados.</p>
         </div>
       </div>
