@@ -6,7 +6,7 @@ import Image from 'next/image'
 import { Navbar } from '@/components/marketplace/navbar'
 import { CartSidebar } from '@/components/marketplace/cart-sidebar'
 import { Button } from '@/components/ui/button'
-import { getProduct, getProducts } from '@/services/yampi'
+import { getProduct, getProductBySlug, getProducts } from '@/services/yampi'
 import { Product, ProductVariant } from '@/types'
 import { useCartStore } from '@/store/cart-store'
 import { ShoppingCart, Star, ArrowLeft, Plus, Minus, ChevronRight } from 'lucide-react'
@@ -482,74 +482,102 @@ export default function ProductPage() {
   }, [product?.variants])
 
   useEffect(() => {
-    if (params.id) {
-      // Buscar o produto por ID e redirecionar para a URL com slug
-      getProduct(params.id as string).then((product) => {
-        if (product && product.slug) {
-          router.replace(`/${product.slug}`)
-        } else {
-          // Se não tem slug, manter na URL antiga por enquanto
-          setProduct(product)
-          setSelectedColor(null)
-          setSelectedSize(null)
-          if (product?.variants && product.variants.length > 0) {
-            const grouped = groupVariants(product.variants)
-            if (grouped.colors.length > 0) {
-              setSelectedColor(grouped.colors[0].value)
-            }
-            if (grouped.sizes.length > 0) {
-              setSelectedSize(grouped.sizes[0].value)
-            }
-            if (grouped.colors.length > 0 || grouped.sizes.length > 0) {
-              const initialVariant = findVariantByAttributes(product.variants, grouped.colors[0]?.value || null, grouped.sizes[0]?.value || null)
-              if (initialVariant) {
-                setSelectedVariant(initialVariant.id)
-              } else {
-                setSelectedVariant(product.variants[0].id)
-              }
-            } else {
-              setSelectedVariant(product.variants[0].id)
-            }
-          }
-          setIsLoading(false)
+    if (params.slug) {
+      const slugParam = params.slug as string
 
-          setIsLoadingRelated(true)
-          if (product?.categoryId) {
-            getProducts({ categoryId: product.categoryId, limit: 12 }).then((result) => {
-              const filtered = result.products.filter(prod => prod.id !== product.id)
-              if (filtered.length > 0) {
-                setRelatedProducts(filtered.slice(0, 6))
-              } else {
-                getProducts({ limit: 12 }).then((allResult) => {
-                  const allFiltered = allResult.products.filter(prod => prod.id !== product.id)
-                  setRelatedProducts(allFiltered.slice(0, 6))
-                })
-              }
-              setIsLoadingRelated(false)
-            }).catch(() => {
-              getProducts({ limit: 12 }).then((allResult) => {
-                const allFiltered = allResult.products.filter(prod => prod.id !== product.id)
-                setRelatedProducts(allFiltered.slice(0, 6))
-                setIsLoadingRelated(false)
-              }).catch(() => {
-                setIsLoadingRelated(false)
-              })
-            })
+      // Lista de rotas existentes que não são produtos
+      const existingRoutes = [
+        'products', 'checkout', 'admin', 'api', 'lpwpc', 'politicas',
+        'order-success', 'test-yampi', 'debug-products', 'not-found'
+      ]
+
+      // Se for uma rota existente, não tentar buscar como produto
+      if (existingRoutes.includes(slugParam)) {
+        setIsLoading(false)
+        return
+      }
+
+      // Verificar se o parâmetro é um ID numérico (compatibilidade com links antigos)
+      const isNumericId = /^\d+$/.test(slugParam)
+
+      if (isNumericId) {
+        // Se é um ID numérico, buscar o produto por ID e redirecionar para o slug
+        getProduct(slugParam).then((product) => {
+          if (product && product.slug) {
+            router.replace(`/${product.slug}`)
           } else {
-            getProducts({ limit: 12 }).then((result) => {
-              const filtered = result.products.filter(prod => prod.id !== product.id)
-              setRelatedProducts(filtered.slice(0, 6))
-              setIsLoadingRelated(false)
-            }).catch(() => {
-              setIsLoadingRelated(false)
-            })
+            setIsLoading(false)
+          }
+        }).catch(() => {
+          setIsLoading(false)
+        })
+        return
+      }
+
+      // Se não é ID numérico, buscar normalmente por slug
+      getProductBySlug(slugParam).then((p) => {
+        if (!p) {
+          setIsLoading(false)
+          return
+        }
+        setProduct(p)
+        setSelectedColor(null)
+        setSelectedSize(null)
+        if (p.variants && p.variants.length > 0) {
+          const grouped = groupVariants(p.variants)
+          if (grouped.colors.length > 0) {
+            setSelectedColor(grouped.colors[0].value)
+          }
+          if (grouped.sizes.length > 0) {
+            setSelectedSize(grouped.sizes[0].value)
+          }
+          if (grouped.colors.length > 0 || grouped.sizes.length > 0) {
+            const initialVariant = findVariantByAttributes(p.variants, grouped.colors[0]?.value || null, grouped.sizes[0]?.value || null)
+            if (initialVariant) {
+              setSelectedVariant(initialVariant.id)
+            } else {
+              setSelectedVariant(p.variants[0].id)
+            }
+          } else {
+            setSelectedVariant(p.variants[0].id)
           }
         }
-      }).catch(() => {
         setIsLoading(false)
+
+        setIsLoadingRelated(true)
+        if (p.categoryId) {
+          getProducts({ categoryId: p.categoryId, limit: 12 }).then((result) => {
+            const filtered = result.products.filter(prod => prod.id !== p.id)
+            if (filtered.length > 0) {
+              setRelatedProducts(filtered.slice(0, 6))
+            } else {
+              getProducts({ limit: 12 }).then((allResult) => {
+                const allFiltered = allResult.products.filter(prod => prod.id !== p.id)
+                setRelatedProducts(allFiltered.slice(0, 6))
+              })
+            }
+            setIsLoadingRelated(false)
+          }).catch(() => {
+            getProducts({ limit: 12 }).then((allResult) => {
+              const allFiltered = allResult.products.filter(prod => prod.id !== p.id)
+              setRelatedProducts(allFiltered.slice(0, 6))
+              setIsLoadingRelated(false)
+            }).catch(() => {
+              setIsLoadingRelated(false)
+            })
+          })
+        } else {
+          getProducts({ limit: 12 }).then((result) => {
+            const filtered = result.products.filter(prod => prod.id !== p.id)
+            setRelatedProducts(filtered.slice(0, 6))
+            setIsLoadingRelated(false)
+          }).catch(() => {
+            setIsLoadingRelated(false)
+          })
+        }
       })
     }
-  }, [params.id, router])
+  }, [params.slug, router])
 
   const handleAddToCart = () => {
     if (!product) return

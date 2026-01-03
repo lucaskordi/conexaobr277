@@ -208,12 +208,13 @@ function mapYampiProduct(product: any, categories?: Category[]): Product {
 
   const mappedProduct = {
     id: String(productData.id || product.id),
+    slug: productData.slug || productData.handle || productData.seo?.slug,
     name: productData.name || productData.title || product.name || product.title || 'Produto sem nome',
     description: description,
     price: price,
     compareAtPrice: compareAtPrice,
     images: images.filter(Boolean),
-    categoryId: productData.category_id 
+    categoryId: productData.category_id
       || (productData.categories && productData.categories.data && productData.categories.data.length > 0 ? String(productData.categories.data[0].id) : undefined)
       || productData.category?.id ? String(productData.category?.id) : undefined,
     category,
@@ -223,7 +224,7 @@ function mapYampiProduct(product: any, categories?: Category[]): Product {
     reviewCount: productData.review_count || productData.reviews_count ? Number(productData.review_count || productData.reviews_count) : undefined,
     dimensions,
     active: productData.active === true || productData.active === 1 || productData.active === '1' || productData.active === undefined,
-    variants: (productData.skus && productData.skus.data && Array.isArray(productData.skus.data) 
+    variants: (productData.skus && productData.skus.data && Array.isArray(productData.skus.data)
       ? productData.skus.data.map((sku: any) => {
           let variantPrice = price
           if (sku.price_sale !== undefined && sku.price_sale !== null) {
@@ -231,7 +232,7 @@ function mapYampiProduct(product: any, categories?: Category[]): Product {
           } else if (sku.price !== undefined && sku.price !== null) {
             variantPrice = Number(sku.price)
           }
-          
+
           return {
             id: String(sku.id),
             name: sku.title || sku.name || sku.sku || '',
@@ -391,6 +392,25 @@ export async function getProducts(params?: {
   } catch (error) {
     console.error('Error fetching products:', error)
     return { products: [], totalPages: 1, totalCount: 0 }
+  }
+}
+
+export async function getProductBySlug(slug: string): Promise<Product | null> {
+  try {
+    // Primeiro buscar todos os produtos para encontrar o que tem o slug
+    const { products } = await getProducts({ limit: 1000 }) // limite alto para garantir encontrar
+
+    const product = products.find(p => p.slug === slug)
+    if (!product) {
+      console.warn('Produto com slug não encontrado:', slug)
+      return null
+    }
+
+    // Buscar os detalhes completos do produto encontrado
+    return getProduct(product.id)
+  } catch (error) {
+    console.error('Error fetching product by slug:', error)
+    return null
   }
 }
 

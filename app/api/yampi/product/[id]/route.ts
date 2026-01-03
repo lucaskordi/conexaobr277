@@ -30,7 +30,7 @@ async function fetchYampi(endpoint: string, options?: RequestInit) {
   if (!response.ok) {
     const errorText = await response.text()
     let errorData: any = {}
-    
+
     try {
       errorData = JSON.parse(errorText)
     } catch {
@@ -50,14 +50,14 @@ export async function GET(
   try {
     const resolvedParams = await Promise.resolve(params)
     const productId = resolvedParams.id
-    
+
     if (!productId) {
       return NextResponse.json(
         { error: 'Product ID is required' },
         { status: 400 }
       )
     }
-    
+
     const endpoints = [
       `/catalog/products/${productId}?include=images,skus,prices,brand,categories,firstImage,texts,seo`,
       `/catalog/products/${productId}`,
@@ -75,7 +75,7 @@ export async function GET(
           hasProduct: !!response.product,
           responseKeys: Object.keys(response),
         })
-        
+
         productData = response.data || response.product || response
 
         if (productData && productData.id) {

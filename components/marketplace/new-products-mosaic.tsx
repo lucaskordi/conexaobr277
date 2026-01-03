@@ -31,7 +31,7 @@ export function NewProductsMosaic({ products }: NewProductsMosaicProps) {
           return (
             <Link
               key={product.id}
-              href={`/product/${product.id}`}
+              href={`/${product.slug}`}
               className="relative aspect-square overflow-hidden rounded-lg group"
               onMouseEnter={() => setHoveredIndex(index + 1)}
               onMouseLeave={() => setHoveredIndex(null)}
@@ -70,7 +70,7 @@ export function NewProductsMosaic({ products }: NewProductsMosaicProps) {
 
       <div className="lg:col-span-1">
         <Link
-          href={`/product/${mainProduct.id}`}
+          href={`/${mainProduct.slug}`}
           className="relative aspect-square lg:aspect-auto lg:h-full overflow-hidden rounded-lg group block"
           onMouseEnter={() => setHoveredIndex(0)}
           onMouseLeave={() => setHoveredIndex(null)}

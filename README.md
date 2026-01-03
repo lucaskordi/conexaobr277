@@ -7,7 +7,7 @@ Marketplace moderno desenvolvido com Next.js, integrado com a API Yampi.
 - `/app` - Páginas do Next.js App Router
   - `/` - Página inicial do marketplace
   - `/products` - Listagem de produtos
-  - `/product/[id]` - Detalhes do produto
+  - `/[slug]` - Detalhes do produto
   - `/checkout` - Página de checkout
   - `/order-success` - Página de confirmação de pedido
   - `/lpwpc` - Site original movido para esta rota
@@ -100,7 +100,7 @@ Abra [http://localhost:3000](http://localhost:3000) no navegador.
 
 - `/` - Homepage do marketplace
 - `/products` - Listagem de produtos
-- `/product/[id]` - Detalhes do produto
+- `/[slug]` - Detalhes do produto
 - `/checkout` - Finalização de compra
 - `/order-success` - Confirmação de pedido
 - `/lpwpc` - Site original
