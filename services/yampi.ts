@@ -397,17 +397,61 @@ export async function getProducts(params?: {
 
 export async function getProductBySlug(slug: string): Promise<Product | null> {
   try {
-    // Primeiro buscar todos os produtos para encontrar o que tem o slug
-    const { products } = await getProducts({ limit: 1000 }) // limite alto para garantir encontrar
+    console.log(`🔍 Buscando produto com slug "${slug}"`)
 
-    const product = products.find(p => p.slug === slug)
-    if (!product) {
-      console.warn('Produto com slug não encontrado:', slug)
-      return null
+    // Primeiro tentar buscar diretamente o produto por ID se o slug parecer um ID numérico
+    const isNumericSlug = /^\d+$/.test(slug)
+    if (isNumericSlug) {
+      console.log('Slug parece ser um ID numérico, tentando buscar diretamente')
+      return getProduct(slug)
     }
 
-    // Buscar os detalhes completos do produto encontrado
-    return getProduct(product.id)
+    // Estratégia 1: Tentar buscar por categoria específica se o slug contiver palavras-chave
+    if (slug.includes('cantoneira')) {
+      console.log('Slug contém "cantoneira", tentando buscar na categoria cantoneiras')
+      try {
+        const { products: cantoneiraProducts } = await getProducts({ categoryId: '8229055', limit: 100 })
+        const product = cantoneiraProducts.find(p => p.slug === slug)
+        if (product) {
+          console.log(`✅ Produto encontrado na categoria cantoneiras: ${product.name}`)
+          return getProduct(product.id)
+        }
+      } catch (error) {
+        console.warn('Erro ao buscar na categoria cantoneiras:', error)
+      }
+    }
+
+    // Estratégia 2: Buscar usando termos de busca baseados no slug
+    const searchTerms = slug.split('-').filter(term => term.length > 2)
+    if (searchTerms.length > 0) {
+      console.log(`Tentando busca por termos: ${searchTerms.join(', ')}`)
+      try {
+        const { products: searchProducts } = await getProducts({ search: searchTerms[0], limit: 50 })
+        const product = searchProducts.find(p => p.slug === slug)
+        if (product) {
+          console.log(`✅ Produto encontrado via busca por termo: ${product.name}`)
+          return getProduct(product.id)
+        }
+      } catch (error) {
+        console.warn('Erro na busca por termo:', error)
+      }
+    }
+
+    // Estratégia 3: Buscar todos os produtos disponíveis (com limite alto)
+    console.log('Tentando busca geral de produtos...')
+    const { products } = await getProducts({ limit: 1000 })
+
+    console.log(`📦 Carregados ${products.length} produtos da API`)
+    console.log(`🔍 Slugs disponíveis (primeiros 10):`, products.slice(0, 10).map(p => p.slug).filter(Boolean))
+
+    let product = products.find(p => p.slug === slug)
+    if (product) {
+      console.log(`✅ Produto encontrado na busca geral: ${product.name} (ID: ${product.id})`)
+      return getProduct(product.id)
+    }
+
+    console.warn(`❌ Produto com slug "${slug}" não encontrado`)
+    return null
   } catch (error) {
     console.error('Error fetching product by slug:', error)
     return null
