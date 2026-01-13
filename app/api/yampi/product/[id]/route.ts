@@ -93,6 +93,40 @@ export async function GET(
     }
 
     if (!productData || !productData.id) {
+      console.log(`⚠️ Produto não encontrado via endpoint individual, tentando buscar na lista de produtos...`)
+      
+      try {
+        const listResponse = await fetchYampi(`/catalog/products?active=1&include=images,skus,prices,brand,categories,firstImage,texts&per_page=1000`)
+        
+        let productsList = listResponse.data || listResponse.products || listResponse.items || []
+        
+        if (!Array.isArray(productsList)) {
+          if (productsList.data && Array.isArray(productsList.data)) {
+            productsList = productsList.data
+          } else if (productsList.products && Array.isArray(productsList.products)) {
+            productsList = productsList.products
+          } else {
+            productsList = []
+          }
+        }
+        
+        productData = productsList.find((p: any) => {
+          const pId = String(p.id || p.data?.id || '')
+          return pId === String(productId)
+        })
+        
+        if (productData) {
+          console.log('✅ Produto encontrado na lista de produtos')
+          if (productData.data && productData.data.id) {
+            productData = productData.data
+          }
+        }
+      } catch (listError) {
+        console.warn('Erro ao buscar na lista de produtos:', listError)
+      }
+    }
+
+    if (!productData || !productData.id) {
       return NextResponse.json(
         { error: 'Product not found' },
         { status: 404 }

@@ -399,55 +399,154 @@ export async function getProductBySlug(slug: string): Promise<Product | null> {
   try {
     console.log(`🔍 Buscando produto com slug "${slug}"`)
 
-    // Primeiro tentar buscar diretamente o produto por ID se o slug parecer um ID numérico
     const isNumericSlug = /^\d+$/.test(slug)
     if (isNumericSlug) {
       console.log('Slug parece ser um ID numérico, tentando buscar diretamente')
       return getProduct(slug)
     }
 
-    // Estratégia 1: Tentar buscar por categoria específica se o slug contiver palavras-chave
     if (slug.includes('cantoneira')) {
       console.log('Slug contém "cantoneira", tentando buscar na categoria cantoneiras')
       try {
         const { products: cantoneiraProducts } = await getProducts({ categoryId: '8229055', limit: 100 })
-        const product = cantoneiraProducts.find(p => p.slug === slug)
+        let product = cantoneiraProducts.find(p => {
+          const productSlug = (p.slug || '').toLowerCase().trim()
+          const targetSlug = slug.toLowerCase().trim()
+          return productSlug === targetSlug
+        })
+        
+        if (!product) {
+          const normalizedSlug = slug.toLowerCase().replace(/[^a-z0-9-]/g, '-').replace(/-+/g, '-')
+          product = cantoneiraProducts.find(p => {
+            const productSlug = (p.slug || '').toLowerCase().replace(/[^a-z0-9-]/g, '-').replace(/-+/g, '-')
+            return productSlug === normalizedSlug
+          })
+        }
+        
         if (product) {
-          console.log(`✅ Produto encontrado na categoria cantoneiras: ${product.name}`)
-          return getProduct(product.id)
+          console.log(`✅ Produto encontrado na categoria cantoneiras: ${product.name} (ID: ${product.id})`)
+          try {
+            const fullProduct = await getProduct(product.id)
+            if (fullProduct && (fullProduct.images?.length > 0 || fullProduct.price > 0)) {
+              return fullProduct
+            }
+          } catch (error) {
+            console.warn('Erro ao buscar detalhes completos:', error)
+          }
+          console.log('⚠️ getProduct falhou ou retornou dados incompletos, retornando produto da lista')
+          if (product && (product.images?.length > 0 || product.price > 0)) {
+            return product
+          }
         }
       } catch (error) {
         console.warn('Erro ao buscar na categoria cantoneiras:', error)
       }
     }
 
-    // Estratégia 2: Buscar usando termos de busca baseados no slug
     const searchTerms = slug.split('-').filter(term => term.length > 2)
     if (searchTerms.length > 0) {
       console.log(`Tentando busca por termos: ${searchTerms.join(', ')}`)
-      try {
-        const { products: searchProducts } = await getProducts({ search: searchTerms[0], limit: 50 })
-        const product = searchProducts.find(p => p.slug === slug)
-        if (product) {
-          console.log(`✅ Produto encontrado via busca por termo: ${product.name}`)
-          return getProduct(product.id)
+      
+      const normalizedTargetSlug = slug.toLowerCase().trim().replace(/[^a-z0-9-]/g, '-').replace(/-+/g, '-')
+      const slugWords = normalizedTargetSlug.split('-').filter(w => w.length > 2)
+      
+      for (const term of searchTerms) {
+        try {
+          const { products: searchProducts } = await getProducts({ search: term, limit: 200 })
+          
+          let product = searchProducts.find(p => {
+            const productSlug = (p.slug || '').toLowerCase().trim()
+            const targetSlug = slug.toLowerCase().trim()
+            return productSlug === targetSlug
+          })
+          
+          if (!product) {
+            product = searchProducts.find(p => {
+              const productSlug = (p.slug || '').toLowerCase().replace(/[^a-z0-9-]/g, '-').replace(/-+/g, '-')
+              return productSlug === normalizedTargetSlug
+            })
+          }
+          
+          if (!product && slugWords.length > 0) {
+            product = searchProducts.find(p => {
+              const productSlug = (p.slug || '').toLowerCase()
+              const productName = (p.name || '').toLowerCase()
+              const slugMatch = slugWords.every(word => productSlug.includes(word) || productName.includes(word))
+              const nameMatch = slugWords.some(word => productName.includes(word))
+              return slugMatch || (nameMatch && productName.includes('nogueira') && productName.includes('ripado'))
+            })
+          }
+          
+          if (product) {
+            console.log(`✅ Produto encontrado via busca por termo "${term}": ${product.name} (ID: ${product.id}, slug: ${product.slug || 'sem slug'})`)
+            try {
+              const fullProduct = await getProduct(product.id)
+              if (fullProduct && (fullProduct.images?.length > 0 || fullProduct.price > 0)) {
+                return fullProduct
+              }
+            } catch (error) {
+              console.warn('Erro ao buscar detalhes completos:', error)
+            }
+            console.log('⚠️ getProduct falhou ou retornou dados incompletos, retornando produto da lista')
+            if (product && (product.images?.length > 0 || product.price > 0)) {
+              return product
+            }
+          }
+        } catch (error) {
+          console.warn(`Erro na busca por termo "${term}":`, error)
         }
-      } catch (error) {
-        console.warn('Erro na busca por termo:', error)
       }
     }
 
-    // Estratégia 3: Buscar todos os produtos disponíveis (com limite alto)
     console.log('Tentando busca geral de produtos...')
-    const { products } = await getProducts({ limit: 1000 })
+    const { products } = await getProducts({ limit: 2000 })
 
     console.log(`📦 Carregados ${products.length} produtos da API`)
-    console.log(`🔍 Slugs disponíveis (primeiros 10):`, products.slice(0, 10).map(p => p.slug).filter(Boolean))
+    console.log(`🔍 Slugs disponíveis (primeiros 20):`, products.slice(0, 20).map(p => p.slug).filter(Boolean))
 
-    let product = products.find(p => p.slug === slug)
+    const normalizedTargetSlug = slug.toLowerCase().trim().replace(/[^a-z0-9-]/g, '-').replace(/-+/g, '-')
+    const slugWords = normalizedTargetSlug.split('-').filter(w => w.length > 2)
+    
+    let product = products.find(p => {
+      const productSlug = (p.slug || '').toLowerCase().trim()
+      const targetSlug = slug.toLowerCase().trim()
+      return productSlug === targetSlug
+    })
+    
+    if (!product) {
+      product = products.find(p => {
+        const productSlug = (p.slug || '').toLowerCase().replace(/[^a-z0-9-]/g, '-').replace(/-+/g, '-')
+        return productSlug === normalizedTargetSlug
+      })
+    }
+    
+    if (!product && slugWords.length > 0) {
+      product = products.find(p => {
+        const productSlug = (p.slug || '').toLowerCase()
+        const productName = (p.name || '').toLowerCase()
+        const targetNormalized = normalizedTargetSlug
+        
+        const slugMatch = slugWords.every(word => productSlug.includes(word) || productName.includes(word))
+        const nameMatch = slugWords.some(word => productName.includes(word))
+        
+        return slugMatch || (nameMatch && productName.includes('nogueira') && productName.includes('ripado'))
+      })
+    }
+    
     if (product) {
-      console.log(`✅ Produto encontrado na busca geral: ${product.name} (ID: ${product.id})`)
-      return getProduct(product.id)
+      console.log(`✅ Produto encontrado na busca geral: ${product.name} (ID: ${product.id}, slug: ${product.slug || 'sem slug'})`)
+      try {
+        const fullProduct = await getProduct(product.id)
+        if (fullProduct && (fullProduct.images?.length > 0 || fullProduct.price > 0)) {
+          return fullProduct
+        }
+      } catch (error) {
+        console.warn('Erro ao buscar detalhes completos:', error)
+      }
+      console.log('⚠️ getProduct falhou ou retornou dados incompletos, retornando produto da lista')
+      if (product && (product.images?.length > 0 || product.price > 0)) {
+        return product
+      }
     }
 
     console.warn(`❌ Produto com slug "${slug}" não encontrado`)
